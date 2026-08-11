@@ -9,12 +9,15 @@ const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 let supabase = null;
 try {
     if (typeof supabasejs !== 'undefined') {
-        supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+        // Safe SDK client generation bypassing variable collision
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
-        supabase = window['@supabase/supabase-js']?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window['@supabase/supabase-js']?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 } catch (e) {
-    console.warn("Supabase SDK initialization warning. Make sure variables are updated with proper keys.", e);
+    console.warn("Supabase SDK initialization warning.", e);
 }
 
 // --- 2. CLIENT-SIDE ROUTER ---
