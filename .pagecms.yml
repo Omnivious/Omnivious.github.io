@@ -1,0 +1,48 @@
+# .pagescms.yml
+# Configure Pages CMS Visual Editor for your Python Course [175]
+media
+  path assetsimages
+
+collections
+  - name Python Course Videos
+    label Python Videos
+    path datavideos
+    format json
+    fields
+      - name id
+        label Video ID (e.g., v001)
+        type string
+        required true
+      - name title
+        label Video Title
+        type string
+        required true
+      - name description
+        label Video Description
+        type text
+        required true
+      - name embedUrl
+        label YouTubeVimeo Embed URL
+        type string
+        required true
+      - name mindmap
+        label Markmap Mind Map (Markdown format)
+        type text
+        required false
+      - name quiz
+        label JavaScript Quiz (JSON Question Bank format)
+        type list
+        fields
+          - name question
+            label Question Text
+            type string
+          - name type
+            label Question Type (MC or TF)
+            type select
+            options [MC, TF]
+          - name options
+            label Answers Options (One per line for MC)
+            type text
+          - name answer
+            label Correct Answer (e.g., Option index starting at 0, or truefalse)
+            type string
