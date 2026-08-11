@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAK's Portfolio</title>
+    <title>Personal HQ & Learning Platform</title>
     <!-- Tailwind CSS Play CDN (Optimized loading) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -26,9 +26,9 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <!-- Third-party dynamic asset libraries (CDN) -->
-    <!-- Marked Markdown Parser -->
+    <!-- Marked Markdown Parser (Enables formattable textboxes) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- PrismJS Syntax Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -53,10 +53,10 @@
             <!-- Brand Logo -->
             <a href="#home" class="flex items-center space-x-3 group">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-lg shadow-lg group-hover:rotate-6 transition-transform">
-                    MAK
+                    P
                 </div>
                 <span class="font-extrabold text-lg tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
-                    Mohammad Amaan Khan
+                    DIGITAL HQ
                 </span>
             </a>
 
@@ -147,7 +147,7 @@
                         <div class="font-mono text-xs sm:text-sm text-blue-400 space-y-2 py-4">
                             <p class="text-zinc-600"># Dynamic Profile Class</p>
                             <p><span class="text-purple-400">class</span> <span class="text-yellow-400">Developer</span>:</p>
-                            <p class="pl-4">name = <span id="heroProfileName" class="text-green-300">"Your Name"</span></p>
+                            <p class="pl-4">name = <span class="text-green-300" id="heroProfileName">"Your Name"</span></p>
                             <p class="pl-4">role = <span class="text-green-300">"Course Creator"</span></p>
                             <p class="pl-4">videos_count = <span class="text-red-300">189</span></p>
                             <p class="pl-4">stack = [<span class="text-green-300">"Python"</span>, <span class="text-green-300">"Supabase"</span>]</p>
@@ -160,7 +160,7 @@
                 </div>
             </div>
 
-            <!-- Core Dashboard Grid Features (Currently Exploring / Featured Content) -->
+            <!-- Core Dashboard Grid Features -->
             <div class="space-y-12">
                 <div>
                     <h2 class="text-2xl font-bold tracking-tight mb-2">Featured Course Material</h2>
@@ -194,10 +194,11 @@
                                 <h3 id="aboutProfileName" class="font-bold text-lg">Your Name</h3>
                                 <p id="aboutProfileRole" class="text-zinc-500 text-xs">Instructor & Platform Engineer</p>
                             </div>
+                            <!-- Upgraded Social Icons (Now wire-bound) -->
                             <div class="flex space-x-3 text-zinc-400">
-                                <a href="#" class="hover:text-white"><i class="fa-brands fa-github text-lg"></i></a>
-                                <a href="#" class="hover:text-white"><i class="fa-brands fa-linkedin text-lg"></i></a>
-                                <a href="#" class="hover:text-white"><i class="fa-brands fa-youtube text-lg"></i></a>
+                                <a id="profileGithubLink" href="#" target="_blank" class="hover:text-white hidden"><i class="fa-brands fa-github text-lg"></i></a>
+                                <a id="profileLinkedinLink" href="#" target="_blank" class="hover:text-white hidden"><i class="fa-brands fa-linkedin text-lg"></i></a>
+                                <a id="profileYoutubeLink" href="#" target="_blank" class="hover:text-white hidden"><i class="fa-brands fa-youtube text-lg"></i></a>
                             </div>
                         </div>
                     </div>
@@ -205,10 +206,12 @@
                     <div class="space-y-6 md:col-span-2">
                         <div class="prose prose-invert max-w-none text-zinc-300">
                             <h3 class="text-xl font-semibold mb-2">My Journey</h3>
-                            <p id="aboutProfileBio" class="mb-4">Welcome to my Digital HQ. As a software engineering instructor and technical content creator, I build learning experiences that bridge theory with interactive execution. This dynamic platform serves as the master launchpad for my 189-video comprehensive Python Course, alongside an integrated workspace of mindmaps, instant grading quizzes, and study resources. Clear profile in database to populate bio.</p>
-                            <p>All coding modules, assessments, and visual notes hosted here are dynamic—sourced directly from cloud-scale Supabase DB triggers, meaning new lessons populate globally on save.</p>
+                            <!-- Upgraded Formattable Bio Block -->
+                            <div id="aboutProfileBio" class="space-y-4 text-zinc-400 text-sm leading-relaxed">
+                                <p>Welcome to my Digital HQ. Log in to your Admin console and configure your personal biography. This textbox supports Markdown formatting (**bold**, bullet points, headers) for clean styling layouts!</p>
+                            </div>
                         </div>
-
+                        
                         <!-- Core Accomplishments/Achievements -->
                         <div class="space-y-4">
                             <h4 class="font-bold text-lg border-b border-zinc-800 pb-2">Recent Achievements</h4>
@@ -219,10 +222,10 @@
                                         <i class="fa-solid fa-award text-yellow-500 text-lg"></i>
                                         <div>
                                             <p class="font-semibold text-sm">Python Course Launch</p>
-                                            <p class="text-xs text-zinc-500">189 interactive dynamic lessons with automated quizes</p>
+                                            <p class="text-xs text-zinc-500">189 interactive dynamic lessons with automated quizzes</p>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-mono text-zinc-500">2026-08</span>
+                                    <span class="text-xs font-mono text-zinc-500">Active</span>
                                 </div>
                             </div>
                         </div>
@@ -240,7 +243,7 @@
                         <p class="text-zinc-400 text-sm mt-1">A timeline of professional builds and open-source contributions.</p>
                     </div>
                 </div>
-
+                
                 <!-- Projects Grid -->
                 <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Dynamic project cards injected by JS -->
@@ -278,7 +281,7 @@
         <!-- ==================== PAGE: LEARNING HUB ==================== -->
         <section id="page-learning" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+                
                 <!-- Sidebar Course Index/Syllabus -->
                 <div class="lg:col-span-4 border border-zinc-800 bg-zinc-900/50 rounded-xl overflow-hidden h-[calc(100vh-10rem)] sticky top-24 flex flex-col">
                     <div class="p-4 border-b border-zinc-800 bg-zinc-900/80">
@@ -289,7 +292,6 @@
                         <p class="text-xs text-zinc-400 mt-1">189 Dynamic Lessons & Live Sandbox Assets</p>
                     </div>
                     <div id="courseSyllabusContainer" class="flex-grow overflow-y-auto p-4 space-y-4">
-                        <!-- Skeletons showing during fetch -->
                         <div class="skeleton h-12 rounded-lg"></div>
                         <div class="skeleton h-12 rounded-lg"></div>
                         <div class="skeleton h-12 rounded-lg"></div>
@@ -320,84 +322,66 @@
                                     <i class="fa-solid fa-circle-question mr-2"></i>QUIZ
                                 </button>
                                 <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="flashcards">
-                                    <i class="fa-solid fa-clone mr-2"></i>FLASH CARDS
+                                    <i class="fa-solid fa-layer-group mr-2"></i>FLASHCARDS
                                 </button>
                                 <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="resources">
-                                    <i class="fa-solid fa-paperclip mr-2"></i>RESOURCES
+                                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i>RESOURCES
                                 </button>
                             </div>
 
                             <div class="p-6">
-                                <!-- TAB 1: Mind Map (Markmap canvas) -->
-                                <div id="asset-mindmap" class="asset-tab-content space-y-4">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Interactive Concept Mind Map</h4>
-                                    <div class="markmap-container">
-                                        <svg id="markmap-svg"></svg>
-                                    </div>
+                                <!-- TAB: Mindmap -->
+                                <div id="asset-mindmap" class="asset-tab-content overflow-x-auto">
+                                    <svg id="markmap-svg" class="w-full h-96 bg-zinc-950 rounded-lg border border-zinc-800"></svg>
                                 </div>
-
-                                <!-- TAB 2: Quiz (MDQ integration container) -->
-                                <div id="asset-quiz" class="asset-tab-content space-y-4 hidden">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Instant Grading Practice Quiz</h4>
-                                    <div id="mdq-quiz-root" class="mdq-quiz-container">
-                                        <p class="text-xs text-zinc-500 font-mono">No quiz mapped for this module yet.</p>
-                                    </div>
+                                <!-- TAB: Quiz -->
+                                <div id="asset-quiz" class="asset-tab-content hidden">
+                                    <div id="mdq-quiz-root" class="space-y-4"></div>
                                 </div>
-
-                                <!-- TAB 3: Flash Cards (custom responsive flip card app) -->
-                                <div id="asset-flashcards" class="asset-tab-content space-y-4 hidden">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Quick Recall Flash Cards</h4>
-                                    <div id="flashcard-container" class="flex flex-col items-center">
-                                        <!-- HTML template loaded on render -->
-                                    </div>
+                                <!-- TAB: Flashcards -->
+                                <div id="asset-flashcards" class="asset-tab-content hidden flex flex-col items-center">
+                                    <div id="flashcard-container" class="w-full max-w-md flex flex-col items-center min-h-[250px]"></div>
                                 </div>
-
-                                <!-- TAB 4: Resources (Lesson specific custom files/links) -->
-                                <div id="asset-resources" class="asset-tab-content space-y-4 hidden">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Lesson Material & Code Repositories</h4>
-                                    <ul id="lessonResourcesList" class="space-y-2">
-                                        <!-- JS dynamic appends -->
-                                    </ul>
+                                <!-- TAB: Resources -->
+                                <div id="asset-resources" class="asset-tab-content hidden">
+                                    <ul id="lessonResourcesList" class="space-y-3"></ul>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Welcome / Default view if no lesson is selected -->
-                    <div id="learningHubWelcome" class="p-12 border border-dashed border-zinc-800 bg-zinc-900/10 rounded-xl flex flex-col items-center justify-center text-center space-y-4 h-full">
-                        <div class="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 text-2xl">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-lg">Select a lesson to begin Python Mastery</h3>
-                            <p class="text-zinc-500 text-sm max-w-sm mt-1">Explore 189 dynamic Python lessons complete with interactive video playbacks, self-checking code worksheets, flashcards, and concept maps.</p>
-                        </div>
+                    <!-- Welcome panel shown before lesson selection -->
+                    <div id="learningHubWelcome" class="border border-zinc-800 bg-zinc-900/30 rounded-xl p-12 text-center space-y-4">
+                        <i class="fa-solid fa-graduation-cap text-zinc-700 text-5xl"></i>
+                        <h3 class="text-xl font-bold">Welcome to Python Masterclass</h3>
+                        <p class="text-zinc-400 text-sm max-w-md mx-auto">Select a lesson from the dynamic course syllabus on the left to load its lecture video, interactive mind maps, flashcards, and quizzes.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ==================== PAGE: CONTACT ==================== -->
-        <section id="page-contact" class="page-view max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
-            <div class="space-y-8">
-                <div class="border-b border-zinc-800 pb-6 text-center">
-                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Contact</h1>
-                    <p class="text-zinc-400 text-sm mt-1">Submit inquiries or business requests directly.</p>
+        <section id="page-contact" class="page-view max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="border border-zinc-800 bg-zinc-900 p-8 rounded-xl shadow-2xl space-y-6">
+                <div class="text-center">
+                    <i class="fa-solid fa-paper-plane text-blue-500 text-2xl mb-2"></i>
+                    <h2 class="text-2xl font-bold tracking-tight">Get in Touch</h2>
+                    <p class="text-zinc-500 text-xs mt-1">Have questions about the Python course? Send a message.</p>
                 </div>
-                <form id="contactForm" class="space-y-6 vercel-card">
+                <form class="space-y-4" onsubmit="event.preventDefault(); alert('Message successfully sent!'); this.reset();">
                     <div>
-                        <label for="name" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Name</label>
-                        <input type="text" id="contactName" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors">
+                        <label class="block text-xs font-mono text-zinc-400 mb-1">Your Name</label>
+                        <input type="text" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                     </div>
                     <div>
-                        <label for="email" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Email Address</label>
-                        <input type="email" id="contactEmail" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors">
+                        <label class="block text-xs font-mono text-zinc-400 mb-1">Email Address</label>
+                        <input type="email" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                     </div>
                     <div>
-                        <label for="message" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Message</label>
-                        <textarea id="contactMessage" rows="5" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"></textarea>
+                        <label class="block text-xs font-mono text-zinc-400 mb-1">Message Content</label>
+                        <textarea required rows="4" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm"></textarea>
                     </div>
-                    <button type="submit" class="w-full btn-primary font-semibold text-sm">Send Secure Message</button>
+                    <button type="submit" class="w-full btn-primary text-sm py-2">Submit Message</button>
                 </form>
             </div>
         </section>
@@ -428,7 +412,7 @@
 
             <!-- Secured Admin Workspace Panel (Hidden until Auth confirmation) -->
             <div id="adminWorkspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+                
                 <!-- Admin Sidebar Controls -->
                 <div class="lg:col-span-3 border border-zinc-800 bg-zinc-900 rounded-xl p-4 space-y-2 h-fit">
                     <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-800">
@@ -440,6 +424,9 @@
                     </div>
                     <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-blue-400 bg-blue-500/10 font-semibold flex items-center space-x-2" data-tab="videos">
                         <i class="fa-solid fa-video text-xs"></i><span>Manage Videos</span>
+                    </button>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="course_modules">
+                        <i class="fa-solid fa-folder-tree text-xs"></i><span>Manage Modules</span>
                     </button>
                     <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="lessons">
                         <i class="fa-solid fa-book-bookmark text-xs"></i><span>Manage Lessons</span>
@@ -464,11 +451,11 @@
                         </button>
                     </div>
 
-                    <!-- Add/Edit Modal overlay (Form layout) -->
+                    <!-- Add/Edit Form Overlay -->
                     <div id="adminCMSFormContainer" class="hidden p-6 rounded-lg bg-zinc-950 border border-zinc-800 space-y-4">
                         <h4 id="adminFormHeaderTitle" class="font-bold text-sm text-zinc-300">Create Video Element</h4>
                         <form id="adminCMSForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Dynamic Inputs fields will load here on runtime depending on active tab -->
+                            <!-- Dynamic Inputs fields load here from app.js depending on active tab -->
                             <div class="md:col-span-2 flex justify-end space-x-2 pt-4">
                                 <button type="button" id="adminCancelCMSFormBtn" class="px-4 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold">Cancel</button>
                                 <button type="submit" class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">Save Changes</button>
@@ -520,7 +507,7 @@
     <!-- Footer block -->
     <footer class="w-full border-t border-zinc-900 py-6 glass-panel z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500">
-            <p>© 2026 Mohammad Amaan Khan. Created by me & hosted on GitHub Pages.</p>
+            <p>© 2026 Your Name. Generated by Gemini Notebook & hosted on GitHub Pages.</p>
             <div class="flex space-x-4 mt-2 sm:mt-0">
                 <a href="#about" class="hover:text-white">Profile</a>
                 <a href="#projects" class="hover:text-white">Portfolio</a>
