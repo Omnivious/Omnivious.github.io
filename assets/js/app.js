@@ -1,24 +1,23 @@
-// Master Client-Side JavaScript Controller - Dynamic Personal HQ & Learning System
-// Integrates client-side Routing, Supabase database bindings, Markmap visual rendering, and Admin CRUD.
+// Master Client-Side JavaScript Controller (Version 3) - Personal HQ & Dynamic Curriculum CMS
+// Sourced from Creator Digital HQ architecture and optimized for full admin CRUD on GitHub Pages.
 
 // --- 1. CONFIGURATION & CLIENT INIT ---
-// Replace these with your actual Supabase Project configuration values
-const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
+// Update these values with your actual Supabase credentials!
+const SUPABASE_URL = "https://your-supabase-project.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your-anon-key-placeholder";
 
 let supabaseClient = null;
 try {
     if (typeof supabasejs !== 'undefined') {
         supabaseClient = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-        // This resolves the global variable naming conflict by using the CDN's global 'supabase' SDK
-        // to create our custom 'supabaseClient' instance.
+        // Safe variable mapping avoiding global collision with standard Supabase CDN scope
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
         supabaseClient = window['@supabase/supabase-js']?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 } catch (e) {
-    console.warn("Supabase SDK initialization warning. Make sure variables are updated with proper keys.", e);
+    console.warn("Supabase SDK initialization warning.", e);
 }
 
 // --- 2. CLIENT-SIDE ROUTER ---
@@ -35,7 +34,6 @@ const routes = {
 function router() {
     let hash = window.location.hash.substring(1) || 'home';
 
-    // Resolve route parameters if necessary (e.g. learning?lesson=slug)
     let params = {};
     if (hash.includes('?')) {
         const parts = hash.split('?');
@@ -49,18 +47,18 @@ function router() {
 
     const targetPageId = routes[hash] || 'page-home';
 
-    // Hide all view panels
+    // Hide all panels
     document.querySelectorAll('.page-view').forEach(panel => {
         panel.classList.add('hidden');
     });
 
-    // Show active page panel
+    // Show active panel
     const targetPage = document.getElementById(targetPageId);
     if (targetPage) {
         targetPage.classList.remove('hidden');
     }
 
-    // Toggle active navigation states
+    // Nav active styles
     document.querySelectorAll('.nav-link').forEach(link => {
         if (link.getAttribute('data-route') === hash) {
             link.classList.add('active', 'text-white', 'border-b-2', 'border-blue-500');
@@ -71,10 +69,7 @@ function router() {
         }
     });
 
-    // Close mobile menu on route swap
-    document.getElementById('mobileMenu').classList.add('hidden');
-
-    // Section specific load hooks
+    document.getElementById('mobileMenu')?.classList.add('hidden');
     executePageLifecycle(hash, params);
 }
 
@@ -82,8 +77,8 @@ window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', () => {
     router();
     setupGlobalEventListeners();
+    loadGlobalProfile();
 });
-
 
 // --- 3. DYNAMIC LIFECYCLE HOOKS ---
 function executePageLifecycle(route, params) {
@@ -109,8 +104,49 @@ function executePageLifecycle(route, params) {
     }
 }
 
+// --- 4. DYNAMIC PROFILE SYNC ENGINE ---
+async function loadGlobalProfile() {
+    if (!supabaseClient) return;
 
-// --- 4. DATA FETCHING METHODS (Grounded in Schema) ---
+    try {
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('is_admin', true)
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !profile) return;
+
+        // Sync home profile card elements
+        const heroName = document.getElementById('heroProfileName');
+        if (heroName) heroName.textContent = `"${profile.full_name}"`;
+
+        // Sync about profile card elements
+        const aboutDP = document.getElementById('aboutProfileDP');
+        const aboutIcon = document.getElementById('aboutProfileUserIcon');
+        const aboutName = document.getElementById('aboutProfileName');
+        const aboutBio = document.getElementById('aboutProfileBio');
+
+        if (aboutName) aboutName.textContent = profile.full_name;
+        if (aboutBio && profile.bio) aboutBio.textContent = profile.bio;
+
+        if (aboutDP && aboutIcon) {
+            if (profile.avatar_url && profile.avatar_url.trim() !== '') {
+                aboutDP.src = profile.avatar_url;
+                aboutDP.classList.remove('hidden');
+                aboutIcon.classList.add('hidden');
+            } else {
+                aboutDP.classList.add('hidden');
+                aboutIcon.classList.remove('hidden');
+            }
+        }
+    } catch (e) {
+        console.warn("Global profile sync warning:", e);
+    }
+}
+
+// --- 5. DATA FETCHING METHODS ---
 async function loadHomepageFeatured() {
     const grid = document.getElementById('featuredCourseGrid');
     if (!grid) return;
@@ -120,7 +156,6 @@ async function loadHomepageFeatured() {
         return;
     }
 
-    // Fetch featured courses or videos
     const { data: featured, error } = await supabaseClient
         .from('courses')
         .select('*')
@@ -149,12 +184,11 @@ async function loadHomepageFeatured() {
 }
 
 async function loadAboutProfile() {
+    await loadGlobalProfile(); // Keep profile details completely updated
     const list = document.getElementById('achievementsList');
     if (!list) return;
 
-    if (!supabaseClient) {
-        return;
-    }
+    if (!supabaseClient) return;
 
     const { data: achievements, error } = await supabaseClient
         .from('achievements')
@@ -231,7 +265,6 @@ async function loadContentLibrary(filter) {
 
     let contentItems = [];
 
-    // Depending on active category filter tab, build dynamic fetches
     if (filter === 'all' || filter === 'videos') {
         const { data: videos } = await supabaseClient.from('videos').select('*').eq('status', 'published');
         if (videos) contentItems.push(...videos.map(v => ({...v, contentType: 'video'})));
@@ -310,7 +343,6 @@ async function loadLearningHub(activeLessonSlug) {
         return;
     }
 
-    // Fetch Syllabus (Courses -> Modules -> Lessons)
     const { data: modules, error } = await supabaseClient
         .from('course_modules')
         .select(`
@@ -324,9 +356,7 @@ async function loadLearningHub(activeLessonSlug) {
         return;
     }
 
-    // Render Expandable Modules
     syllabus.innerHTML = modules.map(mod => {
-        // Sort sub-lessons by position
         const sortedLessons = mod.lessons ? mod.lessons.sort((a,b) => a.position - b.position) : [];
 
         return `
@@ -349,14 +379,13 @@ async function loadLearningHub(activeLessonSlug) {
         `;
     }).join('');
 
-    // Load active lesson or show welcome screen
     if (activeLessonSlug) {
-        document.getElementById('learningHubWelcome').classList.add('hidden');
-        document.getElementById('activeLessonViewer').classList.remove('hidden');
+        document.getElementById('learningHubWelcome')?.classList.add('hidden');
+        document.getElementById('activeLessonViewer')?.classList.remove('hidden');
         loadLessonDetail(activeLessonSlug);
     } else {
-        document.getElementById('learningHubWelcome').classList.remove('hidden');
-        document.getElementById('activeLessonViewer').classList.add('hidden');
+        document.getElementById('learningHubWelcome')?.classList.remove('hidden');
+        document.getElementById('activeLessonViewer')?.classList.add('hidden');
     }
 }
 
@@ -374,33 +403,29 @@ async function loadLessonDetail(slug) {
 
     if (error || !lesson) return;
 
-    // Load Title & Duration
     document.getElementById('lessonTitle').textContent = lesson.title;
     document.getElementById('lessonDuration').textContent = lesson.videos?.duration || '00:00';
 
-    // Embed Video Iframe
     const videoIframe = document.getElementById('lessonVideoIframe');
-    if (lesson.videos?.youtube_id) {
-        videoIframe.src = `https://www.youtube.com/embed/${lesson.videos.youtube_id}?enablejsapi=1&rel=0`;
-    } else {
-        videoIframe.src = '';
+    if (videoIframe) {
+        if (lesson.videos?.youtube_id) {
+            videoIframe.src = `https://www.youtube.com/embed/${lesson.videos.youtube_id}?enablejsapi=1&rel=0`;
+        } else {
+            videoIframe.src = '';
+        }
     }
 
-    // Dynamic Educational Assets Tab initialization
     renderMindmapTab(lesson.mindmap_markdown);
     renderQuizTab(lesson.quizzes_json);
     renderFlashcardsTab(lesson.flashcards_json);
     renderResourcesTab(lesson.resources_json);
 }
 
-
-// --- 5. INTERACTIVE EDUCATIONAL MODULE ENGINES ---
-
-// A. Mindmap Rendering (Markmap)
+// --- 6. INTERACTIVE EDUCATIONAL MODULE ENGINES ---
 function renderMindmapTab(markdownContent) {
     const svgEl = document.getElementById('markmap-svg');
     if (!svgEl) return;
-    svgEl.innerHTML = ''; // reset
+    svgEl.innerHTML = '';
 
     if (!markdownContent) {
         svgEl.innerHTML = '<text x="50%" y="50%" fill="#a1a1aa" text-anchor="middle" font-size="12" font-family="sans-serif">No custom mind map configured for this lesson yet.</text>';
@@ -417,7 +442,6 @@ function renderMindmapTab(markdownContent) {
     }
 }
 
-// B. Quiz Interface Generator (Using local implementation for browser offline stability)
 function renderQuizTab(quizData) {
     const root = document.getElementById('mdq-quiz-root');
     if (!root) return;
@@ -428,7 +452,6 @@ function renderQuizTab(quizData) {
         return;
     }
 
-    // Self-grading interactive form generator
     root.innerHTML = quizData.questions.map((q, qIndex) => `
         <div class="question-block border border-zinc-800 bg-zinc-950 p-5 rounded-lg mb-4 space-y-3">
             <h5 class="font-bold text-sm text-zinc-200">Q${qIndex + 1}: ${q.question}</h5>
@@ -472,7 +495,6 @@ window.gradeLocalQuiz = function(questions) {
     });
 };
 
-// C. Flashcards Flipping System
 let currentCardIndex = 0;
 let lessonFlashcards = [];
 
@@ -504,7 +526,7 @@ function showFlashcard(index) {
                     <p class="font-bold text-sm text-center text-white">${card.front}</p>
                     <span class="text-[10px] text-zinc-600 mt-6"><i class="fa-solid fa-rotate-left mr-1"></i>Click to reveal</span>
                 </div>
-                <div class="flashcard-back">
+                <div class="flashcard-inner flashcard-back bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-500/30 flex flex-col items-center justify-center p-6 rounded-xl">
                     <span class="text-xs text-sky-400 font-mono tracking-widest uppercase mb-4">Answer Explanation</span>
                     <p class="text-sm font-semibold text-center">${card.back}</p>
                 </div>
@@ -532,7 +554,6 @@ window.nextFlashcard = function() {
     }
 };
 
-// D. Resources List Renderer
 function renderResourcesTab(resources) {
     const list = document.getElementById('lessonResourcesList');
     if (!list) return;
@@ -557,9 +578,11 @@ function renderResourcesTab(resources) {
 }
 
 
-// --- 6. SECURED CREATOR ADMIN BACKEND (CMS CRUD) ---
+// --- 7. SECURED CREATOR ADMIN BACKEND (CMS CRUD IMPLEMENTATION) ---
 let currentAdminTab = 'videos';
 let loadedAdminData = [];
+let isEditMode = false;
+let editingRecordId = null;
 
 async function checkAdminSession() {
     const authContainer = document.getElementById('adminAuthContainer');
@@ -596,6 +619,43 @@ async function loadAdminContentList() {
     const tbody = document.getElementById('adminCMSTableBody');
     if (!tbody) return;
 
+    const tableContainer = tbody.closest('.overflow-x-auto');
+    const addBtn = document.getElementById('adminAddNewContentBtn');
+
+    // Special Case: Manage Profile (No list, directly load edit form inline)
+    if (currentAdminTab === 'profiles') {
+        if (tableContainer) tableContainer.classList.add('hidden');
+        if (addBtn) addBtn.classList.add('hidden');
+
+        tbody.innerHTML = '';
+
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        if (!userId) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-xs text-red-400 py-6">Session expired. Please log in.</td></tr>';
+            return;
+        }
+
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-xs text-red-400 py-6">Profile Load Error: ${error.message}</td></tr>`;
+            return;
+        }
+
+        showAdminCMSForm(true, userId, profile);
+        return;
+    }
+
+    // Normal Tables List
+    if (tableContainer) tableContainer.classList.remove('hidden');
+    if (addBtn) addBtn.classList.remove('hidden');
+    hideAdminCMSForm();
+
     tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6"><i class="fa-solid fa-spinner animate-spin text-blue-500"></i></td></tr>';
 
     const { data, error } = await supabaseClient
@@ -610,7 +670,7 @@ async function loadAdminContentList() {
     loadedAdminData = data;
 
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-zinc-500 text-xs py-6">No records populated in table yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-zinc-500 text-xs py-6">No records populated in table yet. Click "Add New Record".</td></tr>';
         return;
     }
 
@@ -626,10 +686,351 @@ async function loadAdminContentList() {
     `).join('');
 }
 
+window.editAdminRecord = function(id) {
+    const record = loadedAdminData.find(item => item.id === id);
+    if (!record) return;
+    showAdminCMSForm(true, id, record);
+}
 
-// --- 7. UX ENHANCEMENTS (CMD+K / TAB SWITCHES) ---
+window.deleteAdminRecord = async function(id) {
+    if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
+
+    const { error } = await supabaseClient
+        .from(currentAdminTab)
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert(`Delete failed: ${error.message}`);
+    } else {
+        alert("Record successfully deleted!");
+        loadAdminContentList();
+    }
+}
+
+async function showAdminCMSForm(isEdit, recordId = null, record = null) {
+    isEditMode = isEdit;
+    editingRecordId = recordId;
+
+    const formContainer = document.getElementById('adminCMSFormContainer');
+    const headerTitle = document.getElementById('adminFormHeaderTitle');
+    if (!formContainer || !headerTitle) return;
+
+    if (isEdit) {
+        headerTitle.textContent = `Edit ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1)} Entry`;
+    } else {
+        headerTitle.textContent = `Create New ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1)} Entry`;
+    }
+
+    await setupAdminFormFields(record);
+    formContainer.classList.remove('hidden');
+    formContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideAdminCMSForm() {
+    const formContainer = document.getElementById('adminCMSFormContainer');
+    if (formContainer) formContainer.classList.add('hidden');
+
+    const form = document.getElementById('adminCMSForm');
+    if (form) form.reset();
+    isEditMode = false;
+    editingRecordId = null;
+}
+
+async function setupAdminFormFields(record = null) {
+    const form = document.getElementById('adminCMSForm');
+    if (!form) return;
+
+    let inputsHTML = '';
+
+    if (currentAdminTab === 'videos') {
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Video Title</label>
+                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Slug (unique URL path)</label>
+                <input type="text" name="slug" required value="${record?.slug || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">YouTube Video ID (e.g., dQw4w9WgXcQ)</label>
+                <input type="text" name="youtube_id" required value="${record?.youtube_id || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Duration (e.g., 12:34)</label>
+                <input type="text" name="duration" value="${record?.duration || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Description</label>
+                <textarea name="description" rows="3" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.description || ''}</textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Status</label>
+                <select name="status" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    <option value="published" ${record?.status === 'published' ? 'selected' : ''}>Published</option>
+                    <option value="draft" ${record?.status === 'draft' ? 'selected' : ''}>Draft</option>
+                    <option value="archived" ${record?.status === 'archived' ? 'selected' : ''}>Archived</option>
+                </select>
+            </div>
+            <div class="flex items-center space-x-3 pt-6">
+                <input type="checkbox" name="is_featured" id="is_featured" ${record?.is_featured ? 'checked' : ''} class="text-blue-500 focus:ring-0 rounded bg-zinc-900 border-zinc-800">
+                <label for="is_featured" class="text-xs font-mono text-zinc-400">Featured Content</label>
+            </div>
+        `;
+    } else if (currentAdminTab === 'lessons') {
+        let modulesOptions = '<option value="">-- Select Module --</option>';
+        let videosOptions = '<option value="">-- No linked video --</option>';
+
+        try {
+            const { data: modules } = await supabaseClient.from('course_modules').select('id, title').order('position', { ascending: true });
+            if (modules) {
+                modulesOptions += modules.map(m => `<option value="${m.id}" ${record?.module_id === m.id ? 'selected' : ''}>${m.title}</option>`).join('');
+            }
+            const { data: videos } = await supabaseClient.from('videos').select('id, title').order('title', { ascending: true });
+            if (videos) {
+                videosOptions += videos.map(v => `<option value="${v.id}" ${record?.video_id === v.id ? 'selected' : ''}>${v.title}</option>`).join('');
+            }
+        } catch (e) {
+            console.error("Error loading selection inputs", e);
+        }
+
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Lesson Title</label>
+                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Slug (unique URL path)</label>
+                <input type="text" name="slug" required value="${record?.slug || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Parent Module</label>
+                <select name="module_id" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    ${modulesOptions}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Linked Video</label>
+                <select name="video_id" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    ${videosOptions}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Syllabus Index Position (e.g. 1, 2, 3)</label>
+                <input type="number" name="position" required value="${record?.position || '1'}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Interactive Mind Map Markdown (Simple List structure)</label>
+                <textarea name="mindmap_markdown" rows="4" placeholder="# Main Topic\n## Sub Topic\n- Detail Point" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none focus:border-blue-500">${record?.mindmap_markdown || ''}</textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Interactive Quiz JSON (MDQ format)</label>
+                <textarea name="quizzes_json" id="quizzes_json" rows="4" placeholder='{ "questions": [ { "question": "Question text?", "options": ["Option 1", "Option 2"], "correct_index": 0, "explanation": "Answer description" } ] }' class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none focus:border-blue-500">${record?.quizzes_json ? JSON.stringify(record.quizzes_json, null, 2) : ''}</textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Practice Flashcards JSON</label>
+                <textarea name="flashcards_json" id="flashcards_json" rows="4" placeholder='[ { "front": "Question card text", "back": "Answer card text" } ]' class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none focus:border-blue-500">${record?.flashcards_json ? JSON.stringify(record.flashcards_json, null, 2) : ''}</textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Lesson Download Resources JSON</label>
+                <textarea name="resources_json" id="resources_json" rows="4" placeholder='[ { "title": "Cheat Sheet", "url": "https://..." } ]' class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none focus:border-blue-500">${record?.resources_json ? JSON.stringify(record.resources_json, null, 2) : ''}</textarea>
+            </div>
+        `;
+    } else if (currentAdminTab === 'projects') {
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Project Title</label>
+                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Slug (unique URL path)</label>
+                <input type="text" name="slug" required value="${record?.slug || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Short Summary (1-2 sentences)</label>
+                <input type="text" name="summary" required value="${record?.summary || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Detailed Description (Markdown)</label>
+                <textarea name="description" rows="4" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.description || ''}</textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Banner Image URL</label>
+                <input type="url" name="image_url" value="${record?.image_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Live Demo URL</label>
+                <input type="url" name="project_url" value="${record?.project_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">GitHub Repo URL</label>
+                <input type="url" name="github_url" value="${record?.github_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Tags (comma separated)</label>
+                <input type="text" name="tags" placeholder="python, api, web-scraping" value="${record?.tags ? record.tags.join(', ') : ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Status</label>
+                <select name="status" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    <option value="planning" ${record?.status === 'planning' ? 'selected' : ''}>Planning</option>
+                    <option value="in-progress" ${record?.status === 'in-progress' ? 'selected' : ''}>In-Progress</option>
+                    <option value="completed" ${record?.status === 'completed' ? 'selected' : ''}>Completed</option>
+                    <option value="archived" ${record?.status === 'archived' ? 'selected' : ''}>Archived</option>
+                </select>
+            </div>
+            <div class="flex items-center space-x-3 pt-6">
+                <input type="checkbox" name="is_featured" id="proj_featured" ${record?.is_featured ? 'checked' : ''} class="text-blue-500 focus:ring-0 rounded bg-zinc-900 border-zinc-800">
+                <label for="proj_featured" class="text-xs font-mono text-zinc-400">Featured Project</label>
+            </div>
+        `;
+    } else if (currentAdminTab === 'posts') {
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Article Title</label>
+                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Slug (unique URL path)</label>
+                <input type="text" name="slug" required value="${record?.slug || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Brief Excerpt</label>
+                <input type="text" name="excerpt" required value="${record?.excerpt || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Content (Markdown)</label>
+                <textarea name="content" rows="6" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.content || ''}</textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Featured Image URL</label>
+                <input type="url" name="image_url" value="${record?.image_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Tags (comma separated)</label>
+                <input type="text" name="tags" placeholder="tutorial, coding, design" value="${record?.tags ? record.tags.join(', ') : ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Status</label>
+                <select name="status" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    <option value="published" ${record?.status === 'published' ? 'selected' : ''}>Published</option>
+                    <option value="draft" ${record?.status === 'draft' ? 'selected' : ''}>Draft</option>
+                    <option value="archived" ${record?.status === 'archived' ? 'selected' : ''}>Archived</option>
+                </select>
+            </div>
+        `;
+    } else if (currentAdminTab === 'profiles') {
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Display/Full Name</label>
+                <input type="text" name="full_name" required value="${record?.full_name || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Display Picture (Avatar URL)</label>
+                <input type="url" name="avatar_url" value="${record?.avatar_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Biography / About Me Statement</label>
+                <textarea name="bio" rows="4" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.bio || ''}</textarea>
+            </div>
+        `;
+    }
+
+    const buttonSection = form.querySelector('.flex.justify-end');
+    const formFields = Array.from(form.children).filter(child => child !== buttonSection);
+    formFields.forEach(field => form.removeChild(field));
+
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2';
+    div.innerHTML = inputsHTML;
+    form.insertBefore(div, buttonSection);
+}
+
+async function saveAdminRecord(e) {
+    e.preventDefault();
+    if (!supabaseClient) return;
+
+    const form = document.getElementById('adminCMSForm');
+    const formData = new FormData(form);
+    const payload = {};
+
+    for (const [key, value] of formData.entries()) {
+        payload[key] = value;
+    }
+
+    if (currentAdminTab === 'videos' || currentAdminTab === 'projects') {
+        payload['is_featured'] = !!formData.get('is_featured');
+    }
+
+    if (payload['tags']) {
+        payload['tags'] = payload['tags'].split(',').map(t => t.trim()).filter(Boolean);
+    }
+
+    if (currentAdminTab === 'lessons') {
+        const jsonFields = ['quizzes_json', 'flashcards_json', 'resources_json'];
+        for (const field of jsonFields) {
+            const rawVal = formData.get(field);
+            if (rawVal && rawVal.trim() !== '') {
+                try {
+                    payload[field] = JSON.parse(rawVal);
+                } catch (err) {
+                    alert(`Invalid JSON format in the '${field}' field. Verify JSON rules: ${err.message}`);
+                    return;
+                }
+            } else {
+                payload[field] = null;
+            }
+        }
+        if (payload['position']) {
+            payload['position'] = parseInt(payload['position']);
+        }
+    }
+
+    let error = null;
+
+    if (currentAdminTab === 'profiles') {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        if (!userId) {
+            alert("No authenticated session found.");
+            return;
+        }
+        const { error: err } = await supabaseClient
+            .from('profiles')
+            .update(payload)
+            .eq('id', userId);
+        error = err;
+    } else {
+        if (isEditMode && editingRecordId) {
+            const { error: err } = await supabaseClient
+                .from(currentAdminTab)
+                .update(payload)
+                .eq('id', editingRecordId);
+            error = err;
+        } else {
+            const { error: err } = await supabaseClient
+                .from(currentAdminTab)
+                .insert([payload]);
+            error = err;
+        }
+    }
+
+    if (error) {
+        alert(`Save operation failed: ${error.message}`);
+    } else {
+        alert("Record successfully saved to the cloud database!");
+        hideAdminCMSForm();
+        loadAdminContentList();
+        loadGlobalProfile();
+        loadAboutProfile();
+    }
+}
+
+
+// --- 8. UX GLOBAL EVENT LISTENERS & INITS ---
 function setupGlobalEventListeners() {
-    // Mobile Nav Drawer Toggle
+    // Mobile menu toggle
     const mobileToggle = document.getElementById('mobileNavToggle');
     const mobileMenu = document.getElementById('mobileMenu');
     if (mobileToggle && mobileMenu) {
@@ -638,23 +1039,23 @@ function setupGlobalEventListeners() {
         });
     }
 
-    // Command Palette hotkey listen
+    // Command palette key binds
     window.addEventListener('keydown', (e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
             toggleCommandPalette();
         }
         if (e.key === 'Escape') {
-            document.getElementById('commandPalette').classList.add('hidden');
+            document.getElementById('commandPalette')?.classList.add('hidden');
         }
     });
 
     document.getElementById('searchTrigger')?.addEventListener('click', toggleCommandPalette);
     document.getElementById('cmdCloseBtn')?.addEventListener('click', () => {
-        document.getElementById('commandPalette').classList.add('hidden');
+        document.getElementById('commandPalette')?.classList.add('hidden');
     });
 
-    // Asset Tabs Swapping inside lesson viewer
+    // Content asset tabs toggling
     document.querySelectorAll('.asset-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {
             const activeTab = e.currentTarget.getAttribute('data-tab');
@@ -665,11 +1066,11 @@ function setupGlobalEventListeners() {
             e.currentTarget.classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
 
             document.querySelectorAll('.asset-tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`asset-${activeTab}`).classList.remove('hidden');
+            document.getElementById(`asset-${activeTab}`)?.classList.remove('hidden');
         });
     });
 
-    // Admin Tabs Swapping
+    // Admin dashboard tabs toggling
     document.querySelectorAll('.admin-nav-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.admin-nav-btn').forEach(b => {
@@ -684,7 +1085,7 @@ function setupGlobalEventListeners() {
         });
     });
 
-    // Content Library Filter Tabs
+    // Library category filters toggling
     document.querySelectorAll('.filter-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {
             document.querySelectorAll('.filter-tab').forEach(t => {
@@ -696,16 +1097,20 @@ function setupGlobalEventListeners() {
         });
     });
 
-    // Admin Sign in bindings
+    // Admin login / cancel / save bindings
     document.getElementById('adminLoginForm')?.addEventListener('submit', handleAdminLogin);
     document.getElementById('adminLogoutBtn')?.addEventListener('click', handleAdminLogout);
+    document.getElementById('adminAddNewContentBtn')?.addEventListener('click', () => showAdminCMSForm(false));
+    document.getElementById('adminCancelCMSFormBtn')?.addEventListener('click', hideAdminCMSForm);
+    document.getElementById('adminCMSForm')?.addEventListener('submit', saveAdminRecord);
 }
 
 function toggleCommandPalette() {
     const cp = document.getElementById('commandPalette');
+    if (!cp) return;
     cp.classList.toggle('hidden');
     if (!cp.classList.contains('hidden')) {
-        document.getElementById('cmdInput').focus();
+        document.getElementById('cmdInput')?.focus();
     }
 }
 
@@ -730,7 +1135,6 @@ async function handleAdminLogout() {
     checkAdminSession();
 }
 
-// Global warning markup if variables are blank
 function getSupabaseWarningHTML() {
     return `
         <div class="col-span-3 p-6 text-center rounded-xl bg-yellow-500/5 border border-yellow-500/20 text-yellow-400 text-xs font-mono max-w-lg mx-auto">
