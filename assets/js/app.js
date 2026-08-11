@@ -63,6 +63,7 @@ function router() {
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', () => {
     router();
+    loadGlobalProfile(); // <-- This runs immediately on load to fetch your profile details!
     setupGlobalEventListeners();
 });
 
@@ -218,17 +219,27 @@ async function loadHomepageFeatured() {
 }
 
 async function loadAboutProfile() {
+    // 1. Instantly pull name and DP first so they aren't blocked by empty achievements
+    loadGlobalProfile();
+
     const list = document.getElementById('achievementsList');
     if (!list) return;
+
     if (!supabaseClient) return;
 
+    // 2. Fetch milestones from the database
     const { data: achievements, error } = await supabaseClient
         .from('achievements')
         .select('*')
         .order('date_achieved', { ascending: false });
 
-    if (error || !achievements || achievements.length === 0) return;
+    // 3. If there are no achievements, show a placeholder instead of breaking or exiting early
+    if (error || !achievements || achievements.length === 0) {
+        list.innerHTML = `<div class="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800 text-center text-xs text-zinc-500 font-mono py-6">No professional milestones recorded yet. Add them in your Admin panel!</div>`;
+        return;
+    }
 
+    // 4. Render milestones if they exist
     list.innerHTML = achievements.map(ach => `
         <div class="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -241,8 +252,8 @@ async function loadAboutProfile() {
             <span class="text-xs font-mono text-zinc-500">${ach.date_achieved}</span>
         </div>
     `).join('');
-    loadGlobalProfile();
 }
+
 
 async function loadProjectsShowcase() {
     const grid = document.getElementById('projectsGrid');
