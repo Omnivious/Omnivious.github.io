@@ -1131,7 +1131,17 @@ async function handleAdminLogin(e) {
 
 async function handleAdminLogout() {
     if (!supabaseClient) return;
+    
+    // Sign out of the Supabase session
     await supabaseClient.auth.signOut();
+    
+    // Clear out the email and password inputs from the login form
+    const loginForm = document.getElementById('adminLoginForm');
+    if (loginForm) {
+        loginForm.reset();
+    }
+    
+    // Refresh the admin workspace view state
     checkAdminSession();
 }
 
