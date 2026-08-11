@@ -3,8 +3,8 @@
 
 // --- 1. CONFIGURATION & CLIENT INIT ---
 // Update these values with your actual Supabase credentials!
-const SUPABASE_URL = "https://your-supabase-project.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your-anon-key-placeholder";
+const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 
 let supabaseClient = null;
 try {
