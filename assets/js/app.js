@@ -3,7 +3,7 @@
 
 // --- 1. CONFIGURATION & CLIENT INIT ---
 // Replace these with your actual Supabase Project configuration values
-const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 
 let supabaseClient = null;
