@@ -1,8 +1,6 @@
-// Master Client-Side JavaScript Controller (Version 3) - Personal HQ & Dynamic Curriculum CMS
+// Master Client-Side JavaScript Controller (Version 3) - Personal Profile & Dynamic Curriculum CMS
 // Sourced from Creator Digital HQ architecture and optimized for full admin CRUD on GitHub Pages.
 
-// --- 1. CONFIGURATION & CLIENT INIT ---
-// Update these values with your actual Supabase credentials!
 const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 
@@ -11,7 +9,6 @@ try {
     if (typeof supabasejs !== 'undefined') {
         supabaseClient = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-        // Safe variable mapping avoiding global collision with standard Supabase CDN scope
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
         supabaseClient = window['@supabase/supabase-js']?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -20,7 +17,7 @@ try {
     console.warn("Supabase SDK initialization warning.", e);
 }
 
-// --- 2. CLIENT-SIDE ROUTER ---
+// --- CLIENT-SIDE ROUTER ---
 const routes = {
     'home': 'page-home',
     'about': 'page-about',
@@ -33,7 +30,6 @@ const routes = {
 
 function router() {
     let hash = window.location.hash.substring(1) || 'home';
-
     let params = {};
     if (hash.includes('?')) {
         const parts = hash.split('?');
@@ -46,19 +42,10 @@ function router() {
     }
 
     const targetPageId = routes[hash] || 'page-home';
-
-    // Hide all panels
-    document.querySelectorAll('.page-view').forEach(panel => {
-        panel.classList.add('hidden');
-    });
-
-    // Show active panel
+    document.querySelectorAll('.page-view').forEach(panel => panel.classList.add('hidden'));
     const targetPage = document.getElementById(targetPageId);
-    if (targetPage) {
-        targetPage.classList.remove('hidden');
-    }
+    if (targetPage) targetPage.classList.remove('hidden');
 
-    // Nav active styles
     document.querySelectorAll('.nav-link').forEach(link => {
         if (link.getAttribute('data-route') === hash) {
             link.classList.add('active', 'text-white', 'border-b-2', 'border-blue-500');
@@ -77,34 +64,53 @@ window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', () => {
     router();
     setupGlobalEventListeners();
-    loadGlobalProfile();
 });
 
-// --- 3. DYNAMIC LIFECYCLE HOOKS ---
 function executePageLifecycle(route, params) {
     switch(route) {
-        case 'home':
-            loadHomepageFeatured();
-            break;
-        case 'about':
-            loadAboutProfile();
-            break;
-        case 'projects':
-            loadProjectsShowcase();
-            break;
-        case 'content':
-            loadContentLibrary(params.filter || 'all');
-            break;
-        case 'learning':
-            loadLearningHub(params.lesson);
-            break;
-        case 'admin':
-            checkAdminSession();
-            break;
+        case 'home': loadHomepageFeatured(); break;
+        case 'about': loadAboutProfile(); break;
+        case 'projects': loadProjectsShowcase(); break;
+        case 'content': loadContentLibrary(params.filter || 'all'); break;
+        case 'learning': loadLearningHub(params.lesson); break;
+        case 'admin': checkAdminSession(); break;
     }
 }
 
-// --- 4. DYNAMIC PROFILE SYNC ENGINE ---
+// --- DYNAMIC FILE UPLOADS USING SUPABASE STORAGE ---
+async function uploadDeviceFile(fileInputId, targetUrlInputName) {
+    const fileInput = document.getElementById(fileInputId);
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    try {
+        const urlInput = document.querySelector(`[name="${targetUrlInputName}"]`);
+        if (urlInput) urlInput.value = "Uploading file... please wait...";
+
+        const { data, error } = await supabaseClient.storage
+            .from('assets')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabaseClient.storage
+            .from('assets')
+            .getPublicUrl(filePath);
+
+        if (urlInput) {
+            urlInput.value = publicUrl;
+        }
+        alert("Image uploaded successfully! The live URL has been linked below.");
+    } catch (err) {
+        alert(`Device upload failed. Make sure your storage bucket is created and set to public: ${err.message}`);
+    }
+}
+
+// --- PROFILE SYNC ENGINE & SOCIAL WRAPPING ---
 async function loadGlobalProfile() {
     if (!supabaseClient) return;
 
@@ -118,18 +124,20 @@ async function loadGlobalProfile() {
 
         if (error || !profile) return;
 
-        // Sync home profile card elements
         const heroName = document.getElementById('heroProfileName');
         if (heroName) heroName.textContent = `"${profile.full_name}"`;
 
-        // Sync about profile card elements
         const aboutDP = document.getElementById('aboutProfileDP');
         const aboutIcon = document.getElementById('aboutProfileUserIcon');
         const aboutName = document.getElementById('aboutProfileName');
         const aboutBio = document.getElementById('aboutProfileBio');
 
         if (aboutName) aboutName.textContent = profile.full_name;
-        if (aboutBio && profile.bio) aboutBio.textContent = profile.bio;
+
+        // Formattable biography block (Parses Markdown)
+        if (aboutBio && profile.bio) {
+            aboutBio.innerHTML = typeof marked !== 'undefined' ? marked.parse(profile.bio) : profile.bio.replace(/\n/g, '<br>');
+        }
 
         if (aboutDP && aboutIcon) {
             if (profile.avatar_url && profile.avatar_url.trim() !== '') {
@@ -141,20 +149,46 @@ async function loadGlobalProfile() {
                 aboutIcon.classList.remove('hidden');
             }
         }
+
+        // Map and render social links dynamically
+        const ghLink = document.getElementById('profileGithubLink');
+        const liLink = document.getElementById('profileLinkedinLink');
+        const ytLink = document.getElementById('profileYoutubeLink');
+
+        if (ghLink) {
+            if (profile.github_link && profile.github_link.trim() !== '') {
+                ghLink.href = profile.github_link;
+                ghLink.classList.remove('hidden');
+            } else {
+                ghLink.classList.add('hidden');
+            }
+        }
+        if (liLink) {
+            if (profile.linkedin_link && profile.linkedin_link.trim() !== '') {
+                liLink.href = profile.linkedin_link;
+                liLink.classList.remove('hidden');
+            } else {
+                liLink.classList.add('hidden');
+            }
+        }
+        if (ytLink) {
+            if (profile.youtube_link && profile.youtube_link.trim() !== '') {
+                ytLink.href = profile.youtube_link;
+                ytLink.classList.remove('hidden');
+            } else {
+                ytLink.classList.add('hidden');
+            }
+        }
     } catch (e) {
-        console.warn("Global profile sync warning:", e);
+        console.warn("Profile sync exception:", e);
     }
 }
 
-// --- 5. DATA FETCHING METHODS ---
+// --- DATA FETCHING METHODS ---
 async function loadHomepageFeatured() {
     const grid = document.getElementById('featuredCourseGrid');
     if (!grid) return;
-
-    if (!supabaseClient) {
-        grid.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { grid.innerHTML = getSupabaseWarningHTML(); return; }
 
     const { data: featured, error } = await supabaseClient
         .from('courses')
@@ -163,7 +197,7 @@ async function loadHomepageFeatured() {
         .limit(3);
 
     if (error || !featured || featured.length === 0) {
-        grid.innerHTML = `<div class="col-span-3 text-zinc-500 text-sm text-center py-6">No featured courses populated. Sign in to Admin to add records.</div>`;
+        grid.innerHTML = `<div class="col-span-3 text-zinc-500 text-sm text-center py-6">No featured courses populated. Log in to Admin to add records.</div>`;
         return;
     }
 
@@ -184,10 +218,8 @@ async function loadHomepageFeatured() {
 }
 
 async function loadAboutProfile() {
-    await loadGlobalProfile(); // Keep profile details completely updated
     const list = document.getElementById('achievementsList');
     if (!list) return;
-
     if (!supabaseClient) return;
 
     const { data: achievements, error } = await supabaseClient
@@ -209,16 +241,13 @@ async function loadAboutProfile() {
             <span class="text-xs font-mono text-zinc-500">${ach.date_achieved}</span>
         </div>
     `).join('');
+    loadGlobalProfile();
 }
 
 async function loadProjectsShowcase() {
     const grid = document.getElementById('projectsGrid');
     if (!grid) return;
-
-    if (!supabaseClient) {
-        grid.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { grid.innerHTML = getSupabaseWarningHTML(); return; }
 
     const { data: projects, error } = await supabaseClient
         .from('projects')
@@ -241,6 +270,7 @@ async function loadProjectsShowcase() {
                     </div>
                 </div>
                 <div>
+                    ${proj.image_url ? `<div class="aspect-video w-full rounded border border-zinc-850 overflow-hidden mb-3"><img src="${proj.image_url}" class="w-full h-full object-cover"/></div>` : ''}
                     <h3 class="font-bold text-lg text-white mb-2">${proj.title}</h3>
                     <p class="text-sm text-zinc-400 line-clamp-4">${proj.summary}</p>
                 </div>
@@ -255,14 +285,9 @@ async function loadProjectsShowcase() {
 async function loadContentLibrary(filter) {
     const grid = document.getElementById('contentLibraryGrid');
     if (!grid) return;
-
-    if (!supabaseClient) {
-        grid.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { grid.innerHTML = getSupabaseWarningHTML(); return; }
 
     grid.innerHTML = '<div class="col-span-3 py-12 flex justify-center"><i class="fa-solid fa-spinner animate-spin text-2xl text-blue-500"></i></div>';
-
     let contentItems = [];
 
     if (filter === 'all' || filter === 'videos') {
@@ -337,11 +362,7 @@ async function loadContentLibrary(filter) {
 async function loadLearningHub(activeLessonSlug) {
     const syllabus = document.getElementById('courseSyllabusContainer');
     if (!syllabus) return;
-
-    if (!supabaseClient) {
-        syllabus.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { syllabus.innerHTML = getSupabaseWarningHTML(); return; }
 
     const { data: modules, error } = await supabaseClient
         .from('course_modules')
@@ -352,13 +373,12 @@ async function loadLearningHub(activeLessonSlug) {
         .order('position', { ascending: true });
 
     if (error || !modules || modules.length === 0) {
-        syllabus.innerHTML = `<div class="text-zinc-500 text-xs text-center py-6">Syllabus is empty. Initialize via the Admin workspace.</div>`;
+        syllabus.innerHTML = `<div class="text-zinc-500 text-xs text-center py-6">Syllabus is empty. Create Course Modules and Lessons in Admin to begin.</div>`;
         return;
     }
 
     syllabus.innerHTML = modules.map(mod => {
         const sortedLessons = mod.lessons ? mod.lessons.sort((a,b) => a.position - b.position) : [];
-
         return `
             <div class="space-y-1.5 border-b border-zinc-800 pb-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-500 px-1.5 py-1 mb-1 flex items-center space-x-1">
@@ -367,7 +387,7 @@ async function loadLearningHub(activeLessonSlug) {
                 </h4>
                 <div class="space-y-1 pl-1">
                     ${sortedLessons.map(les => `
-                        <a href="#learning?lesson=${les.slug}"
+                        <a href="#learning?lesson=${les.slug}" 
                            class="syllabus-lesson-btn block w-full text-left px-2.5 py-1.5 rounded text-xs transition-all hover:bg-zinc-800 flex items-center justify-between group ${les.slug === activeLessonSlug ? 'bg-blue-600/10 text-blue-400 font-semibold border-l-2 border-l-blue-500' : 'text-zinc-400'}"
                            data-slug="${les.slug}">
                            <span class="truncate pr-4">${les.title}</span>
@@ -394,17 +414,16 @@ async function loadLessonDetail(slug) {
 
     const { data: lesson, error } = await supabaseClient
         .from('lessons')
-        .select(`
-            *,
-            videos ( youtube_id, duration )
-        `)
+        .select(`*, videos ( youtube_id, duration )`)
         .eq('slug', slug)
         .single();
 
     if (error || !lesson) return;
 
-    document.getElementById('lessonTitle').textContent = lesson.title;
-    document.getElementById('lessonDuration').textContent = lesson.videos?.duration || '00:00';
+    const lessonTitle = document.getElementById('lessonTitle');
+    const lessonDuration = document.getElementById('lessonDuration');
+    if (lessonTitle) lessonTitle.textContent = lesson.title;
+    if (lessonDuration) lessonDuration.textContent = lesson.videos?.duration || '00:00';
 
     const videoIframe = document.getElementById('lessonVideoIframe');
     if (videoIframe) {
@@ -421,7 +440,7 @@ async function loadLessonDetail(slug) {
     renderResourcesTab(lesson.resources_json);
 }
 
-// --- 6. INTERACTIVE EDUCATIONAL MODULE ENGINES ---
+// --- EDUCATIONAL COMPONENT PARSERS ---
 function renderMindmapTab(markdownContent) {
     const svgEl = document.getElementById('markmap-svg');
     if (!svgEl) return;
@@ -471,16 +490,15 @@ function renderQuizTab(quizData) {
 }
 
 window.gradeLocalQuiz = function(questions) {
-    let score = 0;
     questions.forEach((q, qIndex) => {
         const selected = document.querySelector(`input[name="q_${qIndex}"]:checked`);
         const feedback = document.getElementById(`feedback_${qIndex}`);
+        if (!feedback) return;
         feedback.classList.remove('hidden', 'text-green-400', 'text-red-400');
-
+        
         if (selected) {
             const answerIndex = parseInt(selected.value);
             if (answerIndex === q.correct_index) {
-                score++;
                 feedback.textContent = `✓ Correct! ${q.explanation || ''}`;
                 feedback.classList.add('text-green-400');
             } else {
@@ -490,7 +508,6 @@ window.gradeLocalQuiz = function(questions) {
         } else {
             feedback.textContent = `⚠ Please select an answer.`;
             feedback.classList.add('text-zinc-500');
-            feedback.classList.remove('hidden');
         }
     });
 };
@@ -515,7 +532,7 @@ function renderFlashcardsTab(cards) {
 
 function showFlashcard(index) {
     const container = document.getElementById('flashcard-container');
-    if (lessonFlashcards.length === 0) return;
+    if (!container || lessonFlashcards.length === 0) return;
 
     const card = lessonFlashcards[index];
     container.innerHTML = `
@@ -526,7 +543,7 @@ function showFlashcard(index) {
                     <p class="font-bold text-sm text-center text-white">${card.front}</p>
                     <span class="text-[10px] text-zinc-600 mt-6"><i class="fa-solid fa-rotate-left mr-1"></i>Click to reveal</span>
                 </div>
-                <div class="flashcard-inner flashcard-back bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-500/30 flex flex-col items-center justify-center p-6 rounded-xl">
+                <div class="flashcard-back">
                     <span class="text-xs text-sky-400 font-mono tracking-widest uppercase mb-4">Answer Explanation</span>
                     <p class="text-sm font-semibold text-center">${card.back}</p>
                 </div>
@@ -577,8 +594,7 @@ function renderResourcesTab(resources) {
     `).join('');
 }
 
-
-// --- 7. SECURED CREATOR ADMIN BACKEND (CMS CRUD IMPLEMENTATION) ---
+// --- SECURED CREATOR ADMIN BACKEND (CMS CRUD) ---
 let currentAdminTab = 'videos';
 let loadedAdminData = [];
 let isEditMode = false;
@@ -619,43 +635,6 @@ async function loadAdminContentList() {
     const tbody = document.getElementById('adminCMSTableBody');
     if (!tbody) return;
 
-    const tableContainer = tbody.closest('.overflow-x-auto');
-    const addBtn = document.getElementById('adminAddNewContentBtn');
-
-    // Special Case: Manage Profile (No list, directly load edit form inline)
-    if (currentAdminTab === 'profiles') {
-        if (tableContainer) tableContainer.classList.add('hidden');
-        if (addBtn) addBtn.classList.add('hidden');
-
-        tbody.innerHTML = '';
-
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        if (!userId) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-xs text-red-400 py-6">Session expired. Please log in.</td></tr>';
-            return;
-        }
-
-        const { data: profile, error } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
-
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-xs text-red-400 py-6">Profile Load Error: ${error.message}</td></tr>`;
-            return;
-        }
-
-        showAdminCMSForm(true, userId, profile);
-        return;
-    }
-
-    // Normal Tables List
-    if (tableContainer) tableContainer.classList.remove('hidden');
-    if (addBtn) addBtn.classList.remove('hidden');
-    hideAdminCMSForm();
-
     tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6"><i class="fa-solid fa-spinner animate-spin text-blue-500"></i></td></tr>';
 
     const { data, error } = await supabaseClient
@@ -670,7 +649,7 @@ async function loadAdminContentList() {
     loadedAdminData = data;
 
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-zinc-500 text-xs py-6">No records populated in table yet. Click "Add New Record".</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-zinc-500 text-xs py-6">No records populated in table yet.</td></tr>';
         return;
     }
 
@@ -686,51 +665,20 @@ async function loadAdminContentList() {
     `).join('');
 }
 
-window.editAdminRecord = function(id) {
-    const record = loadedAdminData.find(item => item.id === id);
-    if (!record) return;
-    showAdminCMSForm(true, id, record);
-}
-
-window.deleteAdminRecord = async function(id) {
-    if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
-
-    const { error } = await supabaseClient
-        .from(currentAdminTab)
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        alert(`Delete failed: ${error.message}`);
-    } else {
-        alert("Record successfully deleted!");
-        loadAdminContentList();
-    }
-}
-
-async function showAdminCMSForm(isEdit, recordId = null, record = null) {
-    isEditMode = isEdit;
-    editingRecordId = recordId;
-
+function showAdminCMSForm() {
     const formContainer = document.getElementById('adminCMSFormContainer');
-    const headerTitle = document.getElementById('adminFormHeaderTitle');
-    if (!formContainer || !headerTitle) return;
+    if (formContainer) formContainer.classList.remove('hidden');
+    
+    const formTitle = document.getElementById('adminFormHeaderTitle');
+    if (formTitle) formTitle.textContent = isEditMode ? `Edit ${currentAdminTab.slice(0, -1)} Record` : `Create New ${currentAdminTab.slice(0, -1)} Record`;
 
-    if (isEdit) {
-        headerTitle.textContent = `Edit ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1)} Entry`;
-    } else {
-        headerTitle.textContent = `Create New ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1)} Entry`;
-    }
-
-    await setupAdminFormFields(record);
-    formContainer.classList.remove('hidden');
-    formContainer.scrollIntoView({ behavior: 'smooth' });
+    setupAdminFormFields(isEditMode ? loadedAdminData.find(d => d.id === editingRecordId) : null);
 }
 
 function hideAdminCMSForm() {
     const formContainer = document.getElementById('adminCMSFormContainer');
     if (formContainer) formContainer.classList.add('hidden');
-
+    
     const form = document.getElementById('adminCMSForm');
     if (form) form.reset();
     isEditMode = false;
@@ -781,7 +729,7 @@ async function setupAdminFormFields(record = null) {
     } else if (currentAdminTab === 'lessons') {
         let modulesOptions = '<option value="">-- Select Module --</option>';
         let videosOptions = '<option value="">-- No linked video --</option>';
-
+        
         try {
             const { data: modules } = await supabaseClient.from('course_modules').select('id, title').order('position', { ascending: true });
             if (modules) {
@@ -822,7 +770,7 @@ async function setupAdminFormFields(record = null) {
             </div>
             <div class="md:col-span-2">
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Interactive Mind Map Markdown (Simple List structure)</label>
-                <textarea name="mindmap_markdown" rows="4" placeholder="# Main Topic\n## Sub Topic\n- Detail Point" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none focus:border-blue-500">${record?.mindmap_markdown || ''}</textarea>
+                <textarea name="mindmap_markdown" rows="4" placeholder="# Main Topic\\n## Sub Topic\\n- Detail Point" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none focus:border-blue-500">${record?.mindmap_markdown || ''}</textarea>
             </div>
             <div class="md:col-span-2">
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Interactive Quiz JSON (MDQ format)</label>
@@ -856,8 +804,9 @@ async function setupAdminFormFields(record = null) {
                 <textarea name="description" rows="4" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.description || ''}</textarea>
             </div>
             <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Banner Image URL</label>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Banner Image URL (or upload below)</label>
                 <input type="url" name="image_url" value="${record?.image_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                <input type="file" id="project_file_picker" accept="image/*" class="mt-2 text-xs text-zinc-500 block w-full file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" onchange="uploadDeviceFile('project_file_picker', 'image_url')">
             </div>
             <div>
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Live Demo URL</label>
@@ -883,6 +832,33 @@ async function setupAdminFormFields(record = null) {
             <div class="flex items-center space-x-3 pt-6">
                 <input type="checkbox" name="is_featured" id="proj_featured" ${record?.is_featured ? 'checked' : ''} class="text-blue-500 focus:ring-0 rounded bg-zinc-900 border-zinc-800">
                 <label for="proj_featured" class="text-xs font-mono text-zinc-400">Featured Project</label>
+            </div>
+        `;
+    } else if (currentAdminTab === 'course_modules') {
+        let coursesOptions = '';
+        try {
+            const { data: courses } = await supabaseClient.from('courses').select('id, title');
+            if (courses) {
+                coursesOptions = courses.map(c => `<option value="${c.id}" ${record?.course_id === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+            }
+        } catch (e) {
+            console.error("Error loading courses selection", e);
+        }
+
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Module Title</label>
+                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Parent Course</label>
+                <select name="course_id" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    ${coursesOptions}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Syllabus Order Position</label>
+                <input type="number" name="position" required value="${record?.position || '1'}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
         `;
     } else if (currentAdminTab === 'posts') {
@@ -929,10 +905,23 @@ async function setupAdminFormFields(record = null) {
             <div>
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Display Picture (Avatar URL)</label>
                 <input type="url" name="avatar_url" value="${record?.avatar_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                <input type="file" id="avatar_file_picker" accept="image/*" class="mt-2 text-xs text-zinc-500 block w-full file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" onchange="uploadDeviceFile('avatar_file_picker', 'avatar_url')">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">GitHub Link</label>
+                <input type="url" name="github_link" value="${record?.github_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">LinkedIn Link</label>
+                <input type="url" name="linkedin_link" value="${record?.linkedin_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">YouTube Link</label>
+                <input type="url" name="youtube_link" value="${record?.youtube_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
             <div class="md:col-span-2">
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Biography / About Me Statement</label>
-                <textarea name="bio" rows="4" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.bio || ''}</textarea>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Biography / Backstory (Supports Markdown: **bold**, - list, line breaks)</label>
+                <textarea name="bio" rows="5" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.bio || ''}</textarea>
             </div>
         `;
     }
@@ -956,7 +945,9 @@ async function saveAdminRecord(e) {
     const payload = {};
 
     for (const [key, value] of formData.entries()) {
-        payload[key] = value;
+        if (key !== 'file' && !key.startsWith('avatar_file') && !key.startsWith('project_file')) {
+            payload[key] = value;
+        }
     }
 
     if (currentAdminTab === 'videos' || currentAdminTab === 'projects') {
@@ -982,9 +973,10 @@ async function saveAdminRecord(e) {
                 payload[field] = null;
             }
         }
-        if (payload['position']) {
-            payload['position'] = parseInt(payload['position']);
-        }
+    }
+
+    if (payload['position']) {
+        payload['position'] = parseInt(payload['position']);
     }
 
     let error = null;
@@ -1027,10 +1019,62 @@ async function saveAdminRecord(e) {
     }
 }
 
+function editAdminRecord(id) {
+    isEditMode = true;
+    editingRecordId = id;
+    showAdminCMSForm();
+}
 
-// --- 8. UX GLOBAL EVENT LISTENERS & INITS ---
+async function deleteAdminRecord(id) {
+    if (!confirm("Are you sure you want to permanently delete this record?")) return;
+    if (!supabaseClient) return;
+
+    const { error } = await supabaseClient
+        .from(currentAdminTab)
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert(`Deletion failed: ${error.message}`);
+    } else {
+        alert("Record permanently deleted.");
+        loadAdminContentList();
+        loadGlobalProfile();
+        loadAboutProfile();
+    }
+}
+
+// --- SECURED ADMIN LOGOUT WITH FIELDS WIPE ---
+async function handleAdminLogout() {
+    if (!supabaseClient) return;
+    
+    await supabaseClient.auth.signOut();
+    
+    const loginForm = document.getElementById('adminLoginForm');
+    if (loginForm) {
+        loginForm.reset();
+    }
+    
+    checkAdminSession();
+}
+
+async function handleAdminLogin(e) {
+    e.preventDefault();
+    if (!supabaseClient) return;
+    
+    const email = document.getElementById('adminEmail').value;
+    const password = document.getElementById('adminPassword').value;
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+        alert(`Authentication Failed: ${error.message}`);
+    } else {
+        checkAdminSession();
+    }
+}
+
+// --- UX GLOBAL EVENT LISTENERS & INITS ---
 function setupGlobalEventListeners() {
-    // Mobile menu toggle
     const mobileToggle = document.getElementById('mobileNavToggle');
     const mobileMenu = document.getElementById('mobileMenu');
     if (mobileToggle && mobileMenu) {
@@ -1039,7 +1083,6 @@ function setupGlobalEventListeners() {
         });
     }
 
-    // Command palette key binds
     window.addEventListener('keydown', (e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
@@ -1052,10 +1095,9 @@ function setupGlobalEventListeners() {
 
     document.getElementById('searchTrigger')?.addEventListener('click', toggleCommandPalette);
     document.getElementById('cmdCloseBtn')?.addEventListener('click', () => {
-        document.getElementById('commandPalette')?.classList.add('hidden');
+        document.getElementById('commandPalette').classList.add('hidden');
     });
 
-    // Content asset tabs toggling
     document.querySelectorAll('.asset-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {
             const activeTab = e.currentTarget.getAttribute('data-tab');
@@ -1064,13 +1106,11 @@ function setupGlobalEventListeners() {
                 t.classList.add('text-zinc-400');
             });
             e.currentTarget.classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
-
             document.querySelectorAll('.asset-tab-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(`asset-${activeTab}`)?.classList.remove('hidden');
         });
     });
 
-    // Admin dashboard tabs toggling
     document.querySelectorAll('.admin-nav-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.admin-nav-btn').forEach(b => {
@@ -1078,14 +1118,13 @@ function setupGlobalEventListeners() {
                 b.classList.add('text-zinc-400');
             });
             e.currentTarget.classList.add('text-blue-400', 'bg-blue-500/10', 'font-semibold');
-
             currentAdminTab = e.currentTarget.getAttribute('data-tab');
-            document.getElementById('adminActionSectionTitle').textContent = `Manage ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1)}`;
+            document.getElementById('adminActionSectionTitle').textContent = `Manage ${currentAdminTab.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`;
+            hideAdminCMSForm();
             loadAdminContentList();
         });
     });
 
-    // Library category filters toggling
     document.querySelectorAll('.filter-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {
             document.querySelectorAll('.filter-tab').forEach(t => {
@@ -1097,10 +1136,9 @@ function setupGlobalEventListeners() {
         });
     });
 
-    // Admin login / cancel / save bindings
     document.getElementById('adminLoginForm')?.addEventListener('submit', handleAdminLogin);
     document.getElementById('adminLogoutBtn')?.addEventListener('click', handleAdminLogout);
-    document.getElementById('adminAddNewContentBtn')?.addEventListener('click', () => showAdminCMSForm(false));
+    document.getElementById('adminAddNewContentBtn')?.addEventListener('click', showAdminCMSForm);
     document.getElementById('adminCancelCMSFormBtn')?.addEventListener('click', hideAdminCMSForm);
     document.getElementById('adminCMSForm')?.addEventListener('submit', saveAdminRecord);
 }
@@ -1112,37 +1150,6 @@ function toggleCommandPalette() {
     if (!cp.classList.contains('hidden')) {
         document.getElementById('cmdInput')?.focus();
     }
-}
-
-async function handleAdminLogin(e) {
-    e.preventDefault();
-    if (!supabaseClient) return;
-
-    const email = document.getElementById('adminEmail').value;
-    const password = document.getElementById('adminPassword').value;
-
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) {
-        alert(`Authentication Failed: ${error.message}`);
-    } else {
-        checkAdminSession();
-    }
-}
-
-async function handleAdminLogout() {
-    if (!supabaseClient) return;
-    
-    // Sign out of the Supabase session
-    await supabaseClient.auth.signOut();
-    
-    // Clear out the email and password inputs from the login form
-    const loginForm = document.getElementById('adminLoginForm');
-    if (loginForm) {
-        loginForm.reset();
-    }
-    
-    // Refresh the admin workspace view state
-    checkAdminSession();
 }
 
 function getSupabaseWarningHTML() {
