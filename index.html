@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Name | Python Educator Portfolio</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- FontAwesome for professional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header>
+        <div class="container nav-container">
+            <a href="#" class="logo">Python Mastery Portfolio</a>
+            <nav>
+                <a href="#about">About Me</a>
+                <a href="#course">Python Course</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero / Personal Brand Section [90] -->
+    <section id="about" class="hero-section">
+        <div class="container hero-grid">
+            <div class="hero-text">
+                <h1>Hi, I'm <span class="highlight">Your Name</span></h1>
+                <p class="subtitle">Python Engineer & Technical Educator [91]</p>
+                <p class="bio">
+                    Welcome to my professional learning hub! I build highly interactive, visual engineering tools.
+                    Below you will find my complete, interactive 189-part Python masterclass, complete with
+                    hand-crafted mind maps, coding quizzes, and dynamic flashcard challenges.
+                </p>
+                <div class="social-links">
+                    <a href="https://github.com/yourusername" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                    <a href="https://linkedin.com/in/yourusername" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                    <a href="mailto:your.email@example.com"><i class="fas fa-envelope"></i> Contact Me</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="profile-card">
+                    <i class="fab fa-python python-bg"></i>
+                    <h3>Python Masterclass</h3>
+                    <p>189 Dynamic Video Lessons</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Python Course Video Grid Section [97] -->
+    <section id="course" class="course-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>The Complete Python Masterclass</h2>
+                <p>Track your progress, watch bite-sized videos, and test your knowledge on the spot.</p>
+
+                <!-- Dynamic Search & Filter Controls -->
+                <div class="filter-controls">
+                    <input type="text" id="search-bar" placeholder="Search Python topics (e.g. lists, functions, OOP)...">
+                </div>
+            </div>
+
+            <!-- Video Grid -->
+            <div id="video-grid" class="video-grid">
+                <!-- Videos will load dynamically here via app.js -->
+                <div class="loading">Loading our python index...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <p>&copy; 2026 Your Name. Powered by GitHub Pages and Pages CMS. [108, 175]</p>
+        </div>
+    </footer>
+
+    <!-- App Logic -->
+    <script src="assets/js/app.js"></script>
+    <script>
+        // Load video list on the homepage
+        document.addEventListener("DOMContentLoaded", () => {
+            initHomepage();
+        });
+    </script>
+</body>
+</html>
