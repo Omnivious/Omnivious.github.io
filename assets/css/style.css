@@ -1,414 +1,161 @@
-/* Custom CSS for Python Mastery Hub [80] */
+/* Premium Visual System - Linear & Vercel Inspired Theme */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    --primary-color: #306998; /* Python blue */
-    --secondary-color: #ffe873; /* Python yellow */
-    --dark-bg: #1e1e1e;
-    --light-bg: #f8f9fa;
-    --text-color: #2b2b2b;
-    --border-color: #dee2e6;
-    --white: #ffffff;
+    --bg-dark: #09090b;
+    --card-dark: #121214;
+    --border-dark: #222226;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --accent-blue: #0072f5;
+    --accent-purple: #7e22ce;
+    --accent-glow: rgba(0, 114, 245, 0.15);
 }
 
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: var(--text-color);
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
     line-height: 1.6;
-    background-color: var(--light-bg);
+    overflow-x: hidden;
 }
 
-.container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
-
-/* Header & Nav */
-header {
-    background-color: var(--dark-bg);
-    padding: 15px 0;
-    border-bottom: 3px solid var(--primary-color);
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
 }
-
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    color: var(--white);
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-nav a {
-    color: var(--white);
-    text-decoration: none;
-    margin-left: 20px;
-    font-weight: 500;
-}
-
-nav a:hover {
-    color: var(--secondary-color);
-}
-
-/* Hero Section [90] */
-.hero-section {
-    padding: 80px 0;
-    background: linear-gradient(135deg, #1f425f 0%, #306998 100%);
-    color: var(--white);
-}
-
-.hero-grid {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 40px;
-}
-
-.hero-text {
-    flex: 1.2;
-}
-
-.hero-text h1 {
-    font-size: 3rem;
-    line-height: 1.2;
-    margin-bottom: 15px;
-}
-
-.hero-text .highlight {
-    color: var(--secondary-color);
-}
-
-.hero-text .subtitle {
-    font-size: 1.5rem;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 20px;
-}
-
-.hero-text .bio {
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.social-links a {
-    display: inline-block;
-    color: var(--dark-bg);
-    background-color: var(--secondary-color);
-    padding: 10px 20px;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    margin-right: 15px;
-    transition: transform 0.2s;
-}
-
-.social-links a:hover {
-    transform: translateY(-2px);
-}
-
-.hero-visual {
-    flex: 0.8;
-}
-
-.profile-card {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    padding: 40px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.python-bg {
-    font-size: 5rem;
-    color: var(--secondary-color);
-    margin-bottom: 20px;
-    opacity: 0.8;
-}
-
-/* Video Grid and Filtering */
-.course-section {
-    padding: 60px 0;
-}
-
-.section-header {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.section-header h2 {
-    font-size: 2.2rem;
-    margin-bottom: 10px;
-    color: var(--primary-color);
-}
-
-.filter-controls {
-    margin: 30px auto 0 auto;
-    max-width: 600px;
-}
-
-#search-bar {
-    width: 100%;
-    padding: 15px 25px;
-    font-size: 1.1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 30px;
-    outline: none;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-#search-bar:focus {
-    border-color: var(--primary-color);
-}
-
-/* Fluid Responsive Video Cards [80, 81] */
-.video-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px;
-}
-
-.video-card {
-    background: var(--white);
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.video-card-badge {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: var(--primary-color);
-    color: var(--white);
-    padding: 5px 10px;
-    font-size: 0.8rem;
+::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
     border-radius: 4px;
-    font-weight: bold;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
-.video-card-content {
-    padding: 25px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
+code, pre {
+    font-family: 'JetBrains Mono', monospace;
 }
 
-.video-card-content h3 {
-    margin-bottom: 10px;
-    font-size: 1.3rem;
-    color: var(--primary-color);
+/* Smooth Navigation Active Glows */
+.nav-link {
+    transition: all 0.2s ease-in-out;
+}
+.nav-link:hover, .nav-link.active {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
 }
 
-.video-card-content p {
-    color: #6c757d;
-    font-size: 0.95rem;
-    margin-bottom: 20px;
-    flex-grow: 1;
-}
-
-.card-meta {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    font-size: 0.85rem;
-    color: #495057;
-}
-
-.card-meta i {
-    color: var(--primary-color);
-}
-
-.btn-primary-small {
-    display: block;
-    text-align: center;
-    background-color: var(--primary-color);
-    color: var(--white);
-    padding: 10px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-/* Dynamic Lesson Detail Page Layout */
-.player-grid {
-    display: flex;
-    gap: 40px;
-    padding: 40px 0;
-}
-
-.player-left {
-    flex: 1.4;
-}
-
-.player-right {
-    flex: 1;
-}
-
-.lesson-title {
-    font-size: 2rem;
-    margin-bottom: 20px;
-    color: var(--primary-color);
-}
-
-/* Responsive 16:9 Aspect Ratio Video Box [80, 118] */
-.video-container {
+/* Premium Card Design with Vercel Hover Borders */
+.vercel-card {
+    background: var(--card-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 24px;
     position: relative;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    height: 0;
     overflow: hidden;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.video-container iframe {
+.vercel-card::before {
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.vercel-card:hover {
+    transform: translateY(-2px);
+    border-color: #3f3f46;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.7);
+}
+
+.vercel-card:hover::before {
+    opacity: 1;
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+    background: rgba(18, 18, 20, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-dark);
+}
+
+/* Futuristic Ambient Radial Glow Effects */
+.bg-glow-radial {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, rgba(9,9,11,0) 70%);
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Custom interactive styling for Mindmaps (Markmap SVGs) */
+.markmap-container {
+    background: #0f0f11;
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    height: 450px;
+    width: 100%;
+    position: relative;
+}
+
+.markmap-container svg {
     width: 100%;
     height: 100%;
-    border: 0;
 }
 
-.description-card {
-    background: var(--white);
-    padding: 25px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+/* Dynamic quiz custom classes matching Bootstrap5 style */
+.mdq-quiz-container {
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--card-dark);
+    border: 1px solid var(--border-dark);
 }
 
-.description-card h3 {
-    margin-bottom: 10px;
-    color: var(--primary-color);
+.mdq-quiz-container .question-block {
+    margin-bottom: 30px;
 }
 
-/* Asset Tabs Layout */
-.asset-tabs {
-    display: flex;
-    background: #e9ecef;
-    border-radius: 8px;
-    padding: 5px;
-    margin-bottom: 20px;
+.mdq-quiz-container button {
+    background: var(--accent-blue) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    padding: 10px 20px !important;
+    font-weight: 500 !important;
+    transition: opacity 0.2s;
 }
 
-.tab-btn {
-    flex: 1;
-    border: none;
-    background: none;
-    padding: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 6px;
-    transition: background 0.2s;
-    color: #495057;
+.mdq-quiz-container button:hover {
+    opacity: 0.9;
 }
 
-.tab-btn.active {
-    background: var(--white);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    color: var(--primary-color);
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Mindmap Visualizer */
-.mindmap-container {
-    border: 1px solid var(--border-color);
-    background: var(--white);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-/* Interactive Quiz Cards [57] */
-.quiz-question-card {
-    background: var(--white);
-    padding: 25px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 20px;
-}
-
-.quiz-question-card h4 {
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-}
-
-.quiz-options-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.quiz-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    cursor: pointer;
-    background: var(--light-bg);
-}
-
-.quiz-option:hover {
-    background: #e9ecef;
-}
-
-.btn-check-quiz {
-    background: var(--primary-color);
-    color: var(--white);
-    border: none;
-    padding: 10px 20px;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.quiz-feedback {
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 5px;
-    font-weight: bold;
-}
-
-.quiz-feedback.correct {
-    background-color: #d1e7dd;
-    border: 1px solid #badbcc;
-}
-
-.quiz-feedback.incorrect {
-    background-color: #f8d7da;
-    border: 1px solid #f5c2c7;
-}
-
-/* Dynamic Flashcards */
-.flashcard {
+/* Flashcards Interactive Container */
+.flashcard-wrapper {
     perspective: 1000px;
-    height: 250px;
-    cursor: pointer;
+    width: 100%;
+    max-width: 480px;
+    height: 280px;
+    margin: 20px auto;
 }
 
 .flashcard-inner {
@@ -416,11 +163,12 @@ nav a:hover {
     width: 100%;
     height: 100%;
     text-align: center;
-    transition: transform 0.6s;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
+    cursor: pointer;
 }
 
-.flashcard.flipped .flashcard-inner {
+.flashcard-wrapper.flipped .flashcard-inner {
     transform: rotateY(180deg);
 }
 
@@ -428,58 +176,72 @@ nav a:hover {
     position: absolute;
     width: 100%;
     height: 100%;
+    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    border-radius: 12px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     padding: 30px;
-    border-radius: 10px;
-    border: 2px dashed var(--primary-color);
+    border: 1px solid var(--border-dark);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
 .flashcard-front {
-    background-color: var(--white);
-    color: var(--text-color);
+    background: var(--card-dark);
+    color: var(--text-primary);
 }
 
 .flashcard-back {
-    background-color: #d1e7dd;
+    background: #1e1e24;
+    color: #38bdf8;
     transform: rotateY(180deg);
-    color: #0f5132;
-    border-color: #badbcc;
 }
 
-.asset-hint {
-    text-align: center;
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-top: 10px;
+/* Button & UI utilities */
+.btn-primary {
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-footer {
-    background-color: var(--dark-bg);
-    color: var(--white);
-    padding: 30px 0;
-    text-align: center;
-    border-top: 3px solid var(--primary-color);
+.btn-primary:hover {
+    background: #0056b3;
 }
 
-/* Fluid Layout Responsive Media Queries [80] */
-@media (max-width: 1024px) {
-    .player-grid {
-        flex-direction: column;
+.btn-secondary {
+    background: #27272a;
+    color: var(--text-primary);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: #3f3f46;
+}
+
+/* Dynamic loading skeletons */
+.skeleton {
+    background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
     }
-}
-
-@media (max-width: 768px) {
-    .hero-grid {
-        flex-direction: column-reverse;
-        text-align: center;
-    }
-    .hero-text h1 {
-        font-size: 2.2rem;
-    }
-    .social-links a {
-        margin: 5px;
+    100% {
+        background-position: -200% 0;
     }
 }

@@ -1,26 +1,15 @@
-\# Omnivious.github.io
+# Creator Digital HQ & Learning Platform
+A premium, dark-themed personal digital headquarters, dynamic video curriculum, and learning platform. Inspired by visual systems like Linear, Vercel, and Apple, this platform serves as the professional home for courses, interactive mindmaps, assessments, and portfolios.
 
-Personal GitHub Pages website for **Omnivious**.
-
-## Overview
-
-This repository contains the source files for the site hosted at:
-
-<https://omnivious.github.io/>
-
-## Local development
-
-Clone the repository and open the site files in a browser, or serve the directory with any local static web server:
-
-```bash
-git clone https://github.com/Omnivious/Omnivious.github.io.git
-cd Omnivious.github.io
-```
-
-## Deployment
-
-The site is deployed automatically by GitHub Pages from this repository. Push changes to the configured branch to publish an updated version.
-
-## License
-
-Unless stated otherwise, the content of this repository is owned by Omnivious.
+## 🛠 Directory Structure
+To deploy this project successfully, structure your repository exactly as follows:
+```text
+yourusername.github.io/
+├── index.html                  # Main SPA core routing & page layout
+├── assets/
+│   ├── css/
+│   │   └── style.css           # Premium visual styling system
+│   └── js/
+│       └── app.js              # Routing, interactive assets & Supabase binds
+├── supabase-schema.sql         # Supabase PostgreSQL tables & RLS policies
+└── README.md                   # Setup and operations specification

@@ -1,89 +1,531 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name | Python Educator Portfolio</title>
+    <title>Personal HQ & Learning Platform</title>
+    <!-- Tailwind CSS Play CDN (Optimized loading) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: {
+                            950: '#09090b',
+                            900: '#121214',
+                            800: '#1e1e24',
+                            700: '#27272a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom styling stylesheet -->
     <link rel="stylesheet" href="assets/css/style.css">
-    <!-- FontAwesome for professional icons -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
 
-    <!-- Header / Navigation -->
-    <header>
-        <div class="container nav-container">
-            <a href="#" class="logo">Python Mastery Portfolio</a>
-            <nav>
-                <a href="#about">About Me</a>
-                <a href="#course">Python Course</a>
-                <a href="#contact">Contact</a>
+    <!-- Third-party dynamic asset libraries (CDN) -->
+    <!-- Marked Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- PrismJS Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <!-- Markmap Mindmap Script & Styles -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.16.0"></script>
+    <!-- MDQ quiz minified library -->
+    <script src="https://scripts.compsci.rocks/quiz/latest/mdq.min.js"></script>
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen relative flex flex-col">
+
+    <!-- Top Ambient Radial Glows -->
+    <div class="bg-glow-radial top-[-100px] left-[-100px]"></div>
+    <div class="bg-glow-radial bottom-[-150px] right-[-100px]"></div>
+
+    <!-- Header & Navigation Bar (Glassmorphic) -->
+    <header class="sticky top-0 z-40 w-full glass-panel border-b border-zinc-800 transition-all duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#home" class="flex items-center space-x-3 group">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-lg shadow-lg group-hover:rotate-6 transition-transform">
+                    P
+                </div>
+                <span class="font-extrabold text-lg tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
+                    DIGITAL HQ
+                </span>
+            </a>
+
+            <!-- Desktop Primary Navigation -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#home" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="home">Home</a>
+                <a href="#about" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="about">About</a>
+                <a href="#projects" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="projects">Projects</a>
+                <a href="#content" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="content">Content Library</a>
+                <a href="#learning" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="learning">Learning Hub</a>
+                <a href="#contact" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="contact">Contact</a>
             </nav>
+
+            <!-- Search, CTA & Mobile Toggle -->
+            <div class="flex items-center space-x-4">
+                <!-- Global Cmd+K Search trigger -->
+                <button id="searchTrigger" class="text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 text-xs flex items-center space-x-2 transition-all">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Search</span>
+                    <kbd class="hidden sm:inline bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700 font-sans">⌘K</kbd>
+                </button>
+
+                <!-- Admin CMS Button -->
+                <a href="#admin" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-zinc-700 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition-all">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Admin</span>
+                </a>
+
+                <!-- Mobile Navigation Toggle -->
+                <button id="mobileNavToggle" class="md:hidden text-zinc-400 hover:text-white focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Dynamic Navigation Drawer -->
+        <div id="mobileMenu" class="hidden md:hidden glass-panel border-b border-zinc-800 transition-all duration-200">
+            <div class="px-2 pt-2 pb-4 space-y-1 sm:px-3 flex flex-col text-center">
+                <a href="#home" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
+                <a href="#about" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About</a>
+                <a href="#projects" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Projects</a>
+                <a href="#content" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Content Library</a>
+                <a href="#learning" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learning Hub</a>
+                <a href="#contact" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Contact</a>
+                <a href="#admin" class="text-zinc-300 bg-zinc-900 border border-zinc-700 block px-3 py-2 rounded-md text-base font-medium mt-3"><i class="fa-solid fa-lock mr-2"></i>Admin Console</a>
+            </div>
         </div>
     </header>
 
-    <!-- Hero / Personal Brand Section [90] -->
-    <section id="about" class="hero-section">
-        <div class="container hero-grid">
-            <div class="hero-text">
-                <h1>Hi, I'm <span class="highlight">Your Name</span></h1>
-                <p class="subtitle">Python Engineer & Technical Educator [91]</p>
-                <p class="bio">
-                    Welcome to my professional learning hub! I build highly interactive, visual engineering tools.
-                    Below you will find my complete, interactive 189-part Python masterclass, complete with
-                    hand-crafted mind maps, coding quizzes, and dynamic flashcard challenges.
-                </p>
-                <div class="social-links">
-                    <a href="https://github.com/yourusername" target="_blank"><i class="fab fa-github"></i> GitHub</a>
-                    <a href="https://linkedin.com/in/yourusername" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
-                    <a href="mailto:your.email@example.com"><i class="fas fa-envelope"></i> Contact Me</a>
+    <!-- Main Content Dynamic Container -->
+    <main class="flex-grow z-10">
+
+        <!-- ==================== PAGE: HOME ==================== -->
+        <section id="page-home" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 hidden">
+            <!-- Hero Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-24">
+                <div class="lg:col-span-7 space-y-6 text-left">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-xs font-semibold text-blue-400">
+                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                        <span>Now Developing Python Course Assets</span>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
+                        A Premium Learning Platform for <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">Python Mastery</span>
+                    </h1>
+                    <p class="text-lg text-zinc-400 max-w-2xl">
+                        A professional universe integrating personal digital assets, dynamic coding challenges, video masterclasses, interactive mind-maps, and live quiz engines. Built specifically for technical self-hosting.
+                    </p>
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <a href="#learning" class="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold text-sm transition-all shadow-lg hover:shadow-blue-500/20">
+                            <i class="fa-solid fa-graduation-cap mr-2"></i>Explore Learning Hub
+                        </a>
+                        <a href="#projects" class="px-6 py-3 rounded-lg border border-zinc-700 hover:bg-zinc-800/50 font-semibold text-sm transition-all">
+                            View Portfolio
+                        </a>
+                    </div>
+                </div>
+                <!-- Profile / Hero Dynamic Graphic Widget -->
+                <div class="lg:col-span-5 relative flex justify-center">
+                    <div class="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-zinc-900 border border-zinc-800 p-6 flex flex-col justify-between shadow-2xl relative vercel-card">
+                        <div class="flex justify-between items-center">
+                            <div class="flex space-x-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            </div>
+                            <span class="text-xs text-zinc-500 font-mono">portfolio.py</span>
+                        </div>
+                        <div class="font-mono text-xs sm:text-sm text-blue-400 space-y-2 py-4">
+                            <p class="text-zinc-600"># Dynamic Profile Class</p>
+                            <p><span class="text-purple-400">class</span> <span class="text-yellow-400">Developer</span>:</p>
+                            <p class="pl-4">name = <span class="text-green-300">"Your Name"</span></p>
+                            <p class="pl-4">role = <span class="text-green-300">"Course Creator"</span></p>
+                            <p class="pl-4">videos_count = <span class="text-red-300">189</span></p>
+                            <p class="pl-4">stack = [<span class="text-green-300">"Python"</span>, <span class="text-green-300">"Supabase"</span>]</p>
+                        </div>
+                        <div class="border-t border-zinc-800 pt-3 flex justify-between items-center text-xs text-zinc-500">
+                            <span>Status: Active</span>
+                            <span class="animate-pulse text-green-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Live</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="hero-visual">
-                <div class="profile-card">
-                    <i class="fab fa-python python-bg"></i>
-                    <h3>Python Masterclass</h3>
-                    <p>189 Dynamic Video Lessons</p>
+
+            <!-- Core Dashboard Grid Features (Currently Exploring / Featured Content) -->
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight mb-2">Featured Course Material</h2>
+                    <p class="text-zinc-400 text-sm">Direct, dynamic highlights pulled from our Supabase curriculum database.</p>
                 </div>
+                <div id="featuredCourseGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Javascript will inject dynamic featured course highlights -->
+                    <div class="skeleton h-48 rounded-xl"></div>
+                    <div class="skeleton h-48 rounded-xl"></div>
+                    <div class="skeleton h-48 rounded-xl"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE: ABOUT ==================== -->
+        <section id="page-about" class="page-view max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="space-y-12">
+                <div class="border-b border-zinc-800 pb-6">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">About Me</h1>
+                    <p class="text-zinc-400 text-sm mt-1">Personal profile, career journey, and achievements.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-6 md:col-span-1">
+                        <!-- Profile Card -->
+                        <div class="p-6 rounded-xl border border-zinc-800 bg-zinc-900 flex flex-col items-center text-center space-y-4">
+                            <div class="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                                <i class="fa-solid fa-user text-4xl text-zinc-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">Your Name</h3>
+                                <p class="text-zinc-500 text-xs">Instructor & Platform Engineer</p>
+                            </div>
+                            <div class="flex space-x-3 text-zinc-400">
+                                <a href="#" class="hover:text-white"><i class="fa-brands fa-github text-lg"></i></a>
+                                <a href="#" class="hover:text-white"><i class="fa-brands fa-linkedin text-lg"></i></a>
+                                <a href="#" class="hover:text-white"><i class="fa-brands fa-youtube text-lg"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Biography & Skills -->
+                    <div class="space-y-6 md:col-span-2">
+                        <div class="prose prose-invert max-w-none text-zinc-300">
+                            <h3 class="text-xl font-semibold mb-2">My Journey</h3>
+                            <p class="mb-4">Welcome to my Digital HQ. As a software engineering instructor and technical content creator, I build learning experiences that bridge theory with interactive execution. This dynamic platform serves as the master launchpad for my 189-video comprehensive Python Course, alongside an integrated workspace of mindmaps, instant grading quizzes, and study resources.</p>
+                            <p>All coding modules, assessments, and visual notes hosted here are dynamic—sourced directly from cloud-scale Supabase DB triggers, meaning new lessons populate globally on save.</p>
+                        </div>
+
+                        <!-- Core Accomplishments/Achievements -->
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-lg border-b border-zinc-800 pb-2">Recent Achievements</h4>
+                            <div id="achievementsList" class="space-y-3">
+                                <!-- Javascript dynamically appends achievements -->
+                                <div class="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fa-solid fa-award text-yellow-500 text-lg"></i>
+                                        <div>
+                                            <p class="font-semibold text-sm">Python Course Launch</p>
+                                            <p class="text-xs text-zinc-500">189 interactive dynamic lessons with automated quizes</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-mono text-zinc-500">2026-08</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE: PROJECTS ==================== -->
+        <section id="page-projects" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="space-y-8">
+                <div class="border-b border-zinc-800 pb-6 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Projects Showcase</h1>
+                        <p class="text-zinc-400 text-sm mt-1">A timeline of professional builds and open-source contributions.</p>
+                    </div>
+                </div>
+
+                <!-- Projects Grid -->
+                <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic project cards injected by JS -->
+                    <div class="skeleton h-64 rounded-xl"></div>
+                    <div class="skeleton h-64 rounded-xl"></div>
+                    <div class="skeleton h-64 rounded-xl"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE: CONTENT LIBRARY ==================== -->
+        <section id="page-content" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="space-y-8">
+                <div class="border-b border-zinc-800 pb-6 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Content Library</h1>
+                        <p class="text-zinc-400 text-sm mt-1">Access modular playlists, video logs, and technical articles.</p>
+                    </div>
+                    <!-- Type Filter Tabs -->
+                    <div class="flex space-x-2 border border-zinc-800 bg-zinc-900/50 p-1.5 rounded-lg text-sm">
+                        <button class="filter-tab px-4 py-1.5 rounded-md font-semibold text-xs text-white bg-blue-600" data-filter="all">All</button>
+                        <button class="filter-tab px-4 py-1.5 rounded-md font-semibold text-xs text-zinc-400 hover:text-white" data-filter="videos">Videos</button>
+                        <button class="filter-tab px-4 py-1.5 rounded-md font-semibold text-xs text-zinc-400 hover:text-white" data-filter="playlists">Playlists</button>
+                        <button class="filter-tab px-4 py-1.5 rounded-md font-semibold text-xs text-zinc-400 hover:text-white" data-filter="articles">Articles</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Content Grid -->
+                <div id="contentLibraryGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- JS handles mapping objects into responsive video thumbs or article lists -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE: LEARNING HUB ==================== -->
+        <section id="page-learning" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- Sidebar Course Index/Syllabus -->
+                <div class="lg:col-span-4 border border-zinc-800 bg-zinc-900/50 rounded-xl overflow-hidden h-[calc(100vh-10rem)] sticky top-24 flex flex-col">
+                    <div class="p-4 border-b border-zinc-800 bg-zinc-900/80">
+                        <h3 class="font-bold text-base flex items-center space-x-2">
+                            <i class="fa-solid fa-book-bookmark text-blue-500"></i>
+                            <span>Python Masterclass (Syllabus)</span>
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-1">189 Dynamic Lessons & Live Sandbox Assets</p>
+                    </div>
+                    <div id="courseSyllabusContainer" class="flex-grow overflow-y-auto p-4 space-y-4">
+                        <!-- Skeletons showing during fetch -->
+                        <div class="skeleton h-12 rounded-lg"></div>
+                        <div class="skeleton h-12 rounded-lg"></div>
+                        <div class="skeleton h-12 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Active Lesson Player & Dynamic Asset Workspace Area -->
+                <div class="lg:col-span-8 space-y-6">
+                    <div id="activeLessonViewer" class="hidden space-y-6">
+                        <!-- Premium Video Player Panel -->
+                        <div class="p-4 rounded-xl border border-zinc-800 bg-zinc-900">
+                            <div class="aspect-video w-full rounded-lg overflow-hidden bg-black relative">
+                                <iframe id="lessonVideoIframe" class="absolute top-0 left-0 w-full h-full border-0" allowfullscreen></iframe>
+                            </div>
+                            <div class="flex items-center justify-between mt-4">
+                                <h2 id="lessonTitle" class="text-xl font-bold tracking-tight">Lesson Header</h2>
+                                <span id="lessonDuration" class="text-xs font-mono text-zinc-500 px-2 py-1 rounded bg-zinc-800 border border-zinc-700">00:00</span>
+                            </div>
+                        </div>
+
+                        <!-- Educational Tabs for Dynamic Interactive Assets -->
+                        <div class="border border-zinc-800 bg-zinc-900/30 rounded-xl overflow-hidden">
+                            <div class="flex border-b border-zinc-800 bg-zinc-900">
+                                <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-blue-500 border-b-2 border-blue-500" data-tab="mindmap">
+                                    <i class="fa-solid fa-sitemap mr-2"></i>MIND MAP
+                                </button>
+                                <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="quiz">
+                                    <i class="fa-solid fa-circle-question mr-2"></i>QUIZ
+                                </button>
+                                <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="flashcards">
+                                    <i class="fa-solid fa-clone mr-2"></i>FLASH CARDS
+                                </button>
+                                <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="resources">
+                                    <i class="fa-solid fa-paperclip mr-2"></i>RESOURCES
+                                </button>
+                            </div>
+
+                            <div class="p-6">
+                                <!-- TAB 1: Mind Map (Markmap canvas) -->
+                                <div id="asset-mindmap" class="asset-tab-content space-y-4">
+                                    <h4 class="text-sm font-semibold text-zinc-400">Interactive Concept Mind Map</h4>
+                                    <div class="markmap-container">
+                                        <svg id="markmap-svg"></svg>
+                                    </div>
+                                </div>
+
+                                <!-- TAB 2: Quiz (MDQ integration container) -->
+                                <div id="asset-quiz" class="asset-tab-content space-y-4 hidden">
+                                    <h4 class="text-sm font-semibold text-zinc-400">Instant Grading Practice Quiz</h4>
+                                    <div id="mdq-quiz-root" class="mdq-quiz-container">
+                                        <p class="text-xs text-zinc-500 font-mono">No quiz mapped for this module yet.</p>
+                                    </div>
+                                </div>
+
+                                <!-- TAB 3: Flash Cards (custom responsive flip card app) -->
+                                <div id="asset-flashcards" class="asset-tab-content space-y-4 hidden">
+                                    <h4 class="text-sm font-semibold text-zinc-400">Quick Recall Flash Cards</h4>
+                                    <div id="flashcard-container" class="flex flex-col items-center">
+                                        <!-- HTML template loaded on render -->
+                                    </div>
+                                </div>
+
+                                <!-- TAB 4: Resources (Lesson specific custom files/links) -->
+                                <div id="asset-resources" class="asset-tab-content space-y-4 hidden">
+                                    <h4 class="text-sm font-semibold text-zinc-400">Lesson Material & Code Repositories</h4>
+                                    <ul id="lessonResourcesList" class="space-y-2">
+                                        <!-- JS dynamic appends -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Welcome / Default view if no lesson is selected -->
+                    <div id="learningHubWelcome" class="p-12 border border-dashed border-zinc-800 bg-zinc-900/10 rounded-xl flex flex-col items-center justify-center text-center space-y-4 h-full">
+                        <div class="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 text-2xl">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Select a lesson to begin Python Mastery</h3>
+                            <p class="text-zinc-500 text-sm max-w-sm mt-1">Explore 189 dynamic Python lessons complete with interactive video playbacks, self-checking code worksheets, flashcards, and concept maps.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE: CONTACT ==================== -->
+        <section id="page-contact" class="page-view max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="space-y-8">
+                <div class="border-b border-zinc-800 pb-6 text-center">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Contact</h1>
+                    <p class="text-zinc-400 text-sm mt-1">Submit inquiries or business requests directly.</p>
+                </div>
+                <form id="contactForm" class="space-y-6 vercel-card">
+                    <div>
+                        <label for="name" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Name</label>
+                        <input type="text" id="contactName" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Email Address</label>
+                        <input type="email" id="contactEmail" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Message</label>
+                        <textarea id="contactMessage" rows="5" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"></textarea>
+                    </div>
+                    <button type="submit" class="w-full btn-primary font-semibold text-sm">Send Secure Message</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE: ADMIN CONSOLE ==================== -->
+        <section id="page-admin" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div id="adminAuthContainer" class="max-w-md mx-auto space-y-8">
+                <!-- User/Admin Login Form -->
+                <div class="border border-zinc-800 bg-zinc-900 p-8 rounded-xl shadow-2xl space-y-6">
+                    <div class="text-center">
+                        <i class="fa-solid fa-lock text-zinc-600 text-3xl mb-2"></i>
+                        <h2 class="text-2xl font-bold tracking-tight">Admin Authentication</h2>
+                        <p class="text-zinc-500 text-xs mt-1">Authorized site content manipulation panel.</p>
+                    </div>
+                    <form id="adminLoginForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-zinc-400 mb-1">Email</label>
+                            <input type="email" id="adminEmail" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-zinc-400 mb-1">Password</label>
+                            <input type="password" id="adminPassword" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                        </div>
+                        <button type="submit" class="w-full btn-primary text-sm py-2">Log In to Console</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Secured Admin Workspace Panel (Hidden until Auth confirmation) -->
+            <div id="adminWorkspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- Admin Sidebar Controls -->
+                <div class="lg:col-span-3 border border-zinc-800 bg-zinc-900 rounded-xl p-4 space-y-2 h-fit">
+                    <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-800">
+                        <div>
+                            <p id="adminUserDisplayName" class="font-bold text-sm">Admin Name</p>
+                            <span class="text-xs text-zinc-500">Root Access Granted</span>
+                        </div>
+                        <button id="adminLogoutBtn" class="text-zinc-500 hover:text-red-400 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    </div>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-blue-400 bg-blue-500/10 font-semibold flex items-center space-x-2" data-tab="videos">
+                        <i class="fa-solid fa-video text-xs"></i><span>Manage Videos</span>
+                    </button>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="lessons">
+                        <i class="fa-solid fa-book-bookmark text-xs"></i><span>Manage Lessons</span>
+                    </button>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="projects">
+                        <i class="fa-solid fa-folder text-xs"></i><span>Manage Projects</span>
+                    </button>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="posts">
+                        <i class="fa-solid fa-file-invoice text-xs"></i><span>Manage Articles</span>
+                    </button>
+                </div>
+
+                <!-- Admin Dynamic Edit Section -->
+                <div class="lg:col-span-9 border border-zinc-800 bg-zinc-900 rounded-xl p-6 space-y-6">
+                    <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
+                        <h2 id="adminActionSectionTitle" class="text-xl font-bold">Manage Course Videos</h2>
+                        <button id="adminAddNewContentBtn" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold transition-all">
+                            <i class="fa-solid fa-plus mr-1"></i> Add New Record
+                        </button>
+                    </div>
+
+                    <!-- Add/Edit Modal overlay (Form layout) -->
+                    <div id="adminCMSFormContainer" class="hidden p-6 rounded-lg bg-zinc-950 border border-zinc-800 space-y-4">
+                        <h4 id="adminFormHeaderTitle" class="font-bold text-sm text-zinc-300">Create Video Element</h4>
+                        <form id="adminCMSForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Dynamic Inputs fields will load here on runtime depending on active tab -->
+                            <div class="md:col-span-2 flex justify-end space-x-2 pt-4">
+                                <button type="button" id="adminCancelCMSFormBtn" class="px-4 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold">Cancel</button>
+                                <button type="submit" class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Dynamic Tables of Records -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-zinc-300">
+                            <thead class="bg-zinc-950 text-xs text-zinc-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-4 py-3">Title</th>
+                                    <th class="px-4 py-3">Unique ID / Slug</th>
+                                    <th class="px-4 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminCMSTableBody" class="divide-y divide-zinc-800">
+                                <!-- JS mapped entries -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Cmd+K Command Palette Modal Overlay -->
+    <div id="commandPalette" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col h-[450px]">
+            <div class="p-4 border-b border-zinc-800 flex items-center space-x-3 bg-zinc-950">
+                <i class="fa-solid fa-magnifying-glass text-zinc-500"></i>
+                <input type="text" id="cmdInput" placeholder="Type slug, course title, or lesson asset to find..." class="w-full bg-transparent text-zinc-100 placeholder-zinc-500 text-sm focus:outline-none">
+                <button id="cmdCloseBtn" class="text-zinc-500 hover:text-white text-xs px-2 py-1 rounded bg-zinc-800">ESC</button>
+            </div>
+            <!-- Search Results panel -->
+            <div id="cmdResults" class="flex-grow overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800">
+                <div class="text-xs text-zinc-500 text-center py-12">Search across python courses, lessons, mindmaps, and achievements instantly.</div>
+            </div>
+            <div class="p-3 border-t border-zinc-800 bg-zinc-950 flex items-center justify-between text-[10px] text-zinc-500 font-mono">
+                <span>↑↓ Navigation</span>
+                <span>ENTER to Select</span>
+                <span>⌘K to Close</span>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Python Course Video Grid Section [97] -->
-    <section id="course" class="course-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>The Complete Python Masterclass</h2>
-                <p>Track your progress, watch bite-sized videos, and test your knowledge on the spot.</p>
-
-                <!-- Dynamic Search & Filter Controls -->
-                <div class="filter-controls">
-                    <input type="text" id="search-bar" placeholder="Search Python topics (e.g. lists, functions, OOP)...">
-                </div>
+    <!-- Footer block -->
+    <footer class="w-full border-t border-zinc-900 py-6 glass-panel z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500">
+            <p>© 2026 Your Name. Generated by Gemini Notebook & hosted on GitHub Pages.</p>
+            <div class="flex space-x-4 mt-2 sm:mt-0">
+                <a href="#about" class="hover:text-white">Profile</a>
+                <a href="#projects" class="hover:text-white">Portfolio</a>
+                <a href="#learning" class="hover:text-white">Syllabus</a>
             </div>
-
-            <!-- Video Grid -->
-            <div id="video-grid" class="video-grid">
-                <!-- Videos will load dynamically here via app.js -->
-                <div class="loading">Loading our python index...</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container footer-content">
-            <p>&copy; 2026 Your Name. Powered by GitHub Pages and Pages CMS. [108, 175]</p>
         </div>
     </footer>
 
-    <!-- App Logic -->
+    <!-- Main Client-Side Controller Module -->
     <script src="assets/js/app.js"></script>
-    <script>
-        // Load video list on the homepage
-        document.addEventListener("DOMContentLoaded", () => {
-            initHomepage();
-        });
-    </script>
 </body>
 </html>
