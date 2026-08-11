@@ -6,18 +6,19 @@
 const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co/rest/v1/";
 const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 
-let supabase = null;
+let supabaseClient = null;
 try {
     if (typeof supabasejs !== 'undefined') {
         supabaseClient = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-        // Safe SDK client generation bypassing variable collision
+        // This resolves the global variable naming conflict by using the CDN's global 'supabase' SDK
+        // to create our custom 'supabaseClient' instance.
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
         supabaseClient = window['@supabase/supabase-js']?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 } catch (e) {
-    console.warn("Supabase SDK initialization warning.", e);
+    console.warn("Supabase SDK initialization warning. Make sure variables are updated with proper keys.", e);
 }
 
 // --- 2. CLIENT-SIDE ROUTER ---
@@ -114,13 +115,13 @@ async function loadHomepageFeatured() {
     const grid = document.getElementById('featuredCourseGrid');
     if (!grid) return;
 
-    if (!supabase) {
+    if (!supabaseClient) {
         grid.innerHTML = getSupabaseWarningHTML();
         return;
     }
 
     // Fetch featured courses or videos
-    const { data: featured, error } = await supabase
+    const { data: featured, error } = await supabaseClient
         .from('courses')
         .select('*')
         .eq('status', 'published')
@@ -151,11 +152,11 @@ async function loadAboutProfile() {
     const list = document.getElementById('achievementsList');
     if (!list) return;
 
-    if (!supabase) {
+    if (!supabaseClient) {
         return;
     }
 
-    const { data: achievements, error } = await supabase
+    const { data: achievements, error } = await supabaseClient
         .from('achievements')
         .select('*')
         .order('date_achieved', { ascending: false });
@@ -180,12 +181,12 @@ async function loadProjectsShowcase() {
     const grid = document.getElementById('projectsGrid');
     if (!grid) return;
 
-    if (!supabase) {
+    if (!supabaseClient) {
         grid.innerHTML = getSupabaseWarningHTML();
         return;
     }
 
-    const { data: projects, error } = await supabase
+    const { data: projects, error } = await supabaseClient
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
@@ -221,7 +222,7 @@ async function loadContentLibrary(filter) {
     const grid = document.getElementById('contentLibraryGrid');
     if (!grid) return;
 
-    if (!supabase) {
+    if (!supabaseClient) {
         grid.innerHTML = getSupabaseWarningHTML();
         return;
     }
@@ -232,15 +233,15 @@ async function loadContentLibrary(filter) {
 
     // Depending on active category filter tab, build dynamic fetches
     if (filter === 'all' || filter === 'videos') {
-        const { data: videos } = await supabase.from('videos').select('*').eq('status', 'published');
+        const { data: videos } = await supabaseClient.from('videos').select('*').eq('status', 'published');
         if (videos) contentItems.push(...videos.map(v => ({...v, contentType: 'video'})));
     }
     if (filter === 'all' || filter === 'playlists') {
-        const { data: playlists } = await supabase.from('playlists').select('*');
+        const { data: playlists } = await supabaseClient.from('playlists').select('*');
         if (playlists) contentItems.push(...playlists.map(p => ({...p, contentType: 'playlist'})));
     }
     if (filter === 'all' || filter === 'articles') {
-        const { data: posts } = await supabase.from('posts').select('*').eq('status', 'published');
+        const { data: posts } = await supabaseClient.from('posts').select('*').eq('status', 'published');
         if (posts) contentItems.push(...posts.map(p => ({...p, contentType: 'article'})));
     }
 
@@ -304,13 +305,13 @@ async function loadLearningHub(activeLessonSlug) {
     const syllabus = document.getElementById('courseSyllabusContainer');
     if (!syllabus) return;
 
-    if (!supabase) {
+    if (!supabaseClient) {
         syllabus.innerHTML = getSupabaseWarningHTML();
         return;
     }
 
     // Fetch Syllabus (Courses -> Modules -> Lessons)
-    const { data: modules, error } = await supabase
+    const { data: modules, error } = await supabaseClient
         .from('course_modules')
         .select(`
             id, title, position,
@@ -360,9 +361,9 @@ async function loadLearningHub(activeLessonSlug) {
 }
 
 async function loadLessonDetail(slug) {
-    if (!supabase) return;
+    if (!supabaseClient) return;
 
-    const { data: lesson, error } = await supabase
+    const { data: lesson, error } = await supabaseClient
         .from('lessons')
         .select(`
             *,
@@ -565,12 +566,12 @@ async function checkAdminSession() {
     const workspace = document.getElementById('adminWorkspace');
     if (!authContainer || !workspace) return;
 
-    if (!supabase) {
+    if (!supabaseClient) {
         authContainer.innerHTML = getSupabaseWarningHTML();
         return;
     }
 
-    const { data: session } = await supabase.auth.getSession();
+    const { data: session } = await supabaseClient.auth.getSession();
     if (session && session.session) {
         authContainer.classList.add('hidden');
         workspace.classList.remove('hidden');
@@ -583,7 +584,7 @@ async function checkAdminSession() {
 }
 
 async function loadAdminUserMetadata(user) {
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseClient
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -597,7 +598,7 @@ async function loadAdminContentList() {
 
     tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6"><i class="fa-solid fa-spinner animate-spin text-blue-500"></i></td></tr>';
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from(currentAdminTab)
         .select('*');
 
@@ -710,12 +711,12 @@ function toggleCommandPalette() {
 
 async function handleAdminLogin(e) {
     e.preventDefault();
-    if (!supabase) return;
+    if (!supabaseClient) return;
 
     const email = document.getElementById('adminEmail').value;
     const password = document.getElementById('adminPassword').value;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) {
         alert(`Authentication Failed: ${error.message}`);
     } else {
@@ -724,8 +725,8 @@ async function handleAdminLogin(e) {
 }
 
 async function handleAdminLogout() {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    if (!supabaseClient) return;
+    await supabaseClient.auth.signOut();
     checkAdminSession();
 }
 
