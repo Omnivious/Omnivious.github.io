@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal HQ & Learning Platform</title>
+    <title>MAK's Portfolio</title>
     <!-- Tailwind CSS Play CDN (Optimized loading) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -147,7 +147,7 @@
                         <div class="font-mono text-xs sm:text-sm text-blue-400 space-y-2 py-4">
                             <p class="text-zinc-600"># Dynamic Profile Class</p>
                             <p><span class="text-purple-400">class</span> <span class="text-yellow-400">Developer</span>:</p>
-                            <p class="pl-4">name = <span class="text-green-300">"Your Name"</span></p>
+                            <p class="pl-4">name = <span id="heroProfileName" class="text-green-300">"Your Name"</span></p>
                             <p class="pl-4">role = <span class="text-green-300">"Course Creator"</span></p>
                             <p class="pl-4">videos_count = <span class="text-red-300">189</span></p>
                             <p class="pl-4">stack = [<span class="text-green-300">"Python"</span>, <span class="text-green-300">"Supabase"</span>]</p>
@@ -186,12 +186,13 @@
                     <div class="space-y-6 md:col-span-1">
                         <!-- Profile Card -->
                         <div class="p-6 rounded-xl border border-zinc-800 bg-zinc-900 flex flex-col items-center text-center space-y-4">
-                            <div class="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
-                                <i class="fa-solid fa-user text-4xl text-zinc-500"></i>
+                            <div id="aboutProfileDPContainer" class="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700 overflow-hidden">
+                                <i class="fa-solid fa-user text-4xl text-zinc-500" id="aboutProfileUserIcon"></i>
+                                <img id="aboutProfileDP" class="w-full h-full object-cover hidden" src="" alt="DP">
                             </div>
                             <div>
-                                <h3 class="font-bold text-lg">Your Name</h3>
-                                <p class="text-zinc-500 text-xs">Instructor & Platform Engineer</p>
+                                <h3 id="aboutProfileName" class="font-bold text-lg">Your Name</h3>
+                                <p id="aboutProfileRole" class="text-zinc-500 text-xs">Instructor & Platform Engineer</p>
                             </div>
                             <div class="flex space-x-3 text-zinc-400">
                                 <a href="#" class="hover:text-white"><i class="fa-brands fa-github text-lg"></i></a>
@@ -204,7 +205,7 @@
                     <div class="space-y-6 md:col-span-2">
                         <div class="prose prose-invert max-w-none text-zinc-300">
                             <h3 class="text-xl font-semibold mb-2">My Journey</h3>
-                            <p class="mb-4">Welcome to my Digital HQ. As a software engineering instructor and technical content creator, I build learning experiences that bridge theory with interactive execution. This dynamic platform serves as the master launchpad for my 189-video comprehensive Python Course, alongside an integrated workspace of mindmaps, instant grading quizzes, and study resources.</p>
+                            <p id="aboutProfileBio" class="mb-4">Welcome to my Digital HQ. As a software engineering instructor and technical content creator, I build learning experiences that bridge theory with interactive execution. This dynamic platform serves as the master launchpad for my 189-video comprehensive Python Course, alongside an integrated workspace of mindmaps, instant grading quizzes, and study resources. Clear profile in database to populate bio.</p>
                             <p>All coding modules, assessments, and visual notes hosted here are dynamic—sourced directly from cloud-scale Supabase DB triggers, meaning new lessons populate globally on save.</p>
                         </div>
 
@@ -449,6 +450,9 @@
                     <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="posts">
                         <i class="fa-solid fa-file-invoice text-xs"></i><span>Manage Articles</span>
                     </button>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="profiles">
+                        <i class="fa-solid fa-user-gear text-xs"></i><span>Manage Profile</span>
+                    </button>
                 </div>
 
                 <!-- Admin Dynamic Edit Section -->
@@ -516,7 +520,7 @@
     <!-- Footer block -->
     <footer class="w-full border-t border-zinc-900 py-6 glass-panel z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500">
-            <p>© 2026 Your Name. Generated by Gemini Notebook & hosted on GitHub Pages.</p>
+            <p>© 2026 Mohammad Amaan Khan. Created by me & hosted on GitHub Pages.</p>
             <div class="flex space-x-4 mt-2 sm:mt-0">
                 <a href="#about" class="hover:text-white">Profile</a>
                 <a href="#projects" class="hover:text-white">Portfolio</a>
