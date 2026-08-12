@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Ground & Learning Platform</title>
-    <!-- Tailwind CSS Play CDN (Optimized loading) -->
+    <title>Personal Ground & Gated Learning Platform</title>
+    <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Third-party dynamic asset libraries (CDN) -->
-    <!-- Marked Markdown Parser -->
+    <!-- Marked Markdown Parser (Enables formattable textboxes) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- PrismJS Syntax Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -49,7 +49,7 @@
 
     <!-- Header & Navigation Bar (Glassmorphic) -->
     <header class="sticky top-0 z-40 w-full glass-panel border-b border-zinc-800 transition-all duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
             <!-- Brand Logo -->
             <a href="#home" class="flex items-center space-x-3 group">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-lg shadow-lg group-hover:rotate-6 transition-transform">
@@ -70,7 +70,7 @@
                 <a href="#contact" class="nav-link text-sm font-medium text-zinc-400 hover:text-white" data-route="contact">Contact</a>
             </nav>
 
-            <!-- Search, CTA & Mobile Toggle -->
+            <!-- Search, CTA Dropdown & Mobile Toggle -->
             <div class="flex items-center space-x-4">
                 <!-- Global Cmd+K Search trigger -->
                 <button id="searchTrigger" class="text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 text-xs flex items-center space-x-2 transition-all">
@@ -79,25 +79,24 @@
                     <kbd class="hidden sm:inline bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700 font-sans">⌘K</kbd>
                 </button>
 
-                <!-- Portal Access Dropdown -->
+                <!-- Premium Portal Access Unified Dropdown Trigger -->
                 <div class="relative inline-block text-left" id="portalDropdownContainer">
-                    <button id="portalDropdownBtn" class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-zinc-700 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition-all focus:outline-none">
-                        <i class="fa-solid fa-user-lock"></i>
+                    <button type="button" onclick="togglePortalDropdown(event)" class="inline-flex items-center justify-center space-x-2 px-3.5 py-1.5 rounded-lg border border-zinc-700 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition-all focus:outline-none">
+                        <i class="fa-solid fa-user-shield text-blue-500"></i>
                         <span>Portal Access</span>
-                        <i class="fa-solid fa-chevron-down text-[8px] ml-1"></i>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-zinc-500"></i>
                     </button>
-                    <!-- Glassmorphic Dropdown menu -->
-                    <div id="portalDropdownMenu" class="hidden absolute right-0 mt-2 w-48 rounded-lg bg-zinc-900 border border-zinc-800 shadow-xl z-50 overflow-hidden">
-                        <div class="py-1">
-                            <button onclick="navigateToLogin('student')" class="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 flex items-center space-x-2 transition-colors">
-                                <i class="fa-solid fa-graduation-cap text-blue-500"></i>
-                                <span>Student Login</span>
-                            </button>
-                            <button onclick="navigateToLogin('admin')" class="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 flex items-center space-x-2 transition-colors border-t border-zinc-800/50">
-                                <i class="fa-solid fa-user-tie text-purple-500"></i>
-                                <span>Admin Portal</span>
-                            </button>
-                        </div>
+                    <!-- Dropdown Options -->
+                    <div id="portalDropdownMenu" class="hidden absolute right-0 mt-2 w-48 rounded-lg shadow-2xl bg-zinc-900 border border-zinc-800 py-1 z-50 overflow-hidden">
+                        <a href="#admin" onclick="triggerPortalRoute('student')" class="flex items-center space-x-2.5 px-4 py-2.5 text-xs text-zinc-300 hover:bg-blue-600 hover:text-white transition-colors">
+                            <i class="fa-solid fa-user-graduate text-zinc-500 group-hover:text-white"></i>
+                            <span>Student Dashboard</span>
+                        </a>
+                        <div class="border-t border-zinc-800"></div>
+                        <a href="#admin" onclick="triggerPortalRoute('admin')" class="flex items-center space-x-2.5 px-4 py-2.5 text-xs text-zinc-300 hover:bg-purple-600 hover:text-white transition-colors">
+                            <i class="fa-solid fa-toolbox text-zinc-500 group-hover:text-white"></i>
+                            <span>Admin Console</span>
+                        </a>
                     </div>
                 </div>
 
@@ -117,10 +116,9 @@
                 <a href="#content" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Content Library</a>
                 <a href="#learning" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Learning Hub</a>
                 <a href="#contact" class="text-zinc-400 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Contact</a>
-                <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-zinc-800">
-                    <a href="#admin" onclick="navigateToLogin('student')" class="text-zinc-300 bg-zinc-900 border border-zinc-700 block px-3 py-2 rounded-md text-xs font-medium"><i class="fa-solid fa-graduation-cap text-blue-500 mr-1.5"></i>Student Login</a>
-                    <a href="#admin" onclick="navigateToLogin('admin')" class="text-zinc-300 bg-zinc-900 border border-zinc-700 block px-3 py-2 rounded-md text-xs font-medium"><i class="fa-solid fa-user-tie text-purple-500 mr-1.5"></i>Admin Portal</a>
-                </div>
+                <div class="border-t border-zinc-850 my-2"></div>
+                <a href="#admin" onclick="triggerPortalRoute('student')" class="text-zinc-300 bg-zinc-900 border border-zinc-800 block px-3 py-2 rounded-md text-sm font-medium"><i class="fa-solid fa-user-graduate mr-2 text-blue-500"></i>Student Dashboard</a>
+                <a href="#admin" onclick="triggerPortalRoute('admin')" class="text-zinc-300 bg-zinc-900 border border-zinc-800 block px-3 py-2 rounded-md text-sm font-medium mt-1"><i class="fa-solid fa-toolbox mr-2 text-purple-500"></i>Admin Console</a>
             </div>
         </div>
     </header>
@@ -166,7 +164,7 @@
                         <div class="font-mono text-xs sm:text-sm text-blue-400 space-y-2 py-4">
                             <p class="text-zinc-600"># Dynamic Profile Class</p>
                             <p><span class="text-purple-400">class</span> <span class="text-yellow-400">Developer</span>:</p>
-                            <p class="pl-4">name = <span id="heroProfileName" class="text-green-300">"Your Name"</span></p>
+                            <p class="pl-4">name = <span class="text-green-300" id="heroProfileName">"Your Name"</span></p>
                             <p class="pl-4">role = <span class="text-green-300">"Content Creator"</span></p>
                             <p class="pl-4">videos_count = <span class="text-red-300">189</span></p>
                             <p class="pl-4">stack = [<span class="text-green-300">"Python"</span>, <span class="text-green-300">"Supabase"</span>]</p>
@@ -179,7 +177,7 @@
                 </div>
             </div>
 
-            <!-- Core Dashboard Grid Features (Currently Exploring / Featured Content) -->
+            <!-- Core Dashboard Grid Features -->
             <div class="space-y-12">
                 <div>
                     <h2 class="text-2xl font-bold tracking-tight mb-2">Featured Course Material</h2>
@@ -213,10 +211,11 @@
                                 <h3 id="aboutProfileName" class="font-bold text-lg">Your Name</h3>
                                 <p id="aboutProfileRole" class="text-zinc-500 text-xs">Instructor & Platform Engineer</p>
                             </div>
+                            <!-- Social Icons (Now wire-bound) -->
                             <div class="flex space-x-3 text-zinc-400">
-                                <a href="#" class="hover:text-white"><i class="fa-brands fa-github text-lg"></i></a>
-                                <a href="#" class="hover:text-white"><i class="fa-brands fa-linkedin text-lg"></i></a>
-                                <a href="#" class="hover:text-white"><i class="fa-brands fa-youtube text-lg"></i></a>
+                                <a id="profileGithubLink" href="#" target="_blank" class="hover:text-white hidden"><i class="fa-brands fa-github text-lg"></i></a>
+                                <a id="profileLinkedinLink" href="#" target="_blank" class="hover:text-white hidden"><i class="fa-brands fa-linkedin text-lg"></i></a>
+                                <a id="profileYoutubeLink" href="#" target="_blank" class="hover:text-white hidden"><i class="fa-brands fa-youtube text-lg"></i></a>
                             </div>
                         </div>
                     </div>
@@ -224,8 +223,10 @@
                     <div class="space-y-6 md:col-span-2">
                         <div class="prose prose-invert max-w-none text-zinc-300">
                             <h3 class="text-xl font-semibold mb-2">My Journey</h3>
-                            <p id="aboutProfileBio" class="mb-4">Welcome to my Digital HQ. As a software engineering instructor and technical content creator, I build learning experiences that bridge theory with interactive execution. This dynamic platform serves as the master launchpad for my 189-video comprehensive Python Course, alongside an integrated workspace of mindmaps, instant grading quizzes, and study resources. Clear profile in database to populate bio.</p>
-                            <p>All coding modules, assessments, and visual notes hosted here are dynamic—sourced directly from cloud-scale Supabase DB triggers, meaning new lessons populate globally on save.</p>
+                            <!-- Formattable Bio Block -->
+                            <div id="aboutProfileBio" class="space-y-4 text-zinc-400 text-sm leading-relaxed">
+                                <p>Welcome to my Digital HQ. Log in to your Admin console and configure your personal biography. This textbox supports Markdown formatting (**bold**, bullet points, headers) for clean styling layouts!</p>
+                            </div>
                         </div>
 
                         <!-- Core Accomplishments/Achievements -->
@@ -238,10 +239,10 @@
                                         <i class="fa-solid fa-award text-yellow-500 text-lg"></i>
                                         <div>
                                             <p class="font-semibold text-sm">Python Course Launch</p>
-                                            <p class="text-xs text-zinc-500">189 interactive dynamic lessons with automated quizes</p>
+                                            <p class="text-xs text-zinc-500">189 interactive lessons with automated quizzes</p>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-mono text-zinc-500">2026-08</span>
+                                    <span class="text-xs font-mono text-zinc-500">Active</span>
                                 </div>
                             </div>
                         </div>
@@ -308,7 +309,6 @@
                         <p class="text-xs text-zinc-400 mt-1">189 Dynamic Lessons & Live Sandbox Assets</p>
                     </div>
                     <div id="courseSyllabusContainer" class="flex-grow overflow-y-auto p-4 space-y-4">
-                        <!-- Skeletons showing during fetch -->
                         <div class="skeleton h-12 rounded-lg"></div>
                         <div class="skeleton h-12 rounded-lg"></div>
                         <div class="skeleton h-12 rounded-lg"></div>
@@ -339,117 +339,104 @@
                                     <i class="fa-solid fa-circle-question mr-2"></i>QUIZ
                                 </button>
                                 <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="flashcards">
-                                    <i class="fa-solid fa-clone mr-2"></i>FLASH CARDS
+                                    <i class="fa-solid fa-layer-group mr-2"></i>FLASHCARDS
                                 </button>
                                 <button class="asset-tab flex-1 py-3 text-xs font-semibold tracking-wider text-center text-zinc-400 hover:text-white" data-tab="resources">
-                                    <i class="fa-solid fa-paperclip mr-2"></i>RESOURCES
+                                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i>RESOURCES
                                 </button>
                             </div>
 
                             <div class="p-6">
-                                <!-- TAB 1: Mind Map (Markmap canvas) -->
-                                <div id="asset-mindmap" class="asset-tab-content space-y-4">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Interactive Concept Mind Map</h4>
-                                    <div class="markmap-container">
-                                        <svg id="markmap-svg"></svg>
-                                    </div>
+                                <!-- TAB: Mindmap -->
+                                <div id="asset-mindmap" class="asset-tab-content overflow-x-auto">
+                                    <svg id="markmap-svg" class="w-full h-96 bg-zinc-950 rounded-lg border border-zinc-800"></svg>
                                 </div>
-
-                                <!-- TAB 2: Quiz (MDQ integration container) -->
-                                <div id="asset-quiz" class="asset-tab-content space-y-4 hidden">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Instant Grading Practice Quiz</h4>
-                                    <div id="mdq-quiz-root" class="mdq-quiz-container">
-                                        <p class="text-xs text-zinc-500 font-mono">No quiz mapped for this module yet.</p>
-                                    </div>
+                                <!-- TAB: Quiz -->
+                                <div id="asset-quiz" class="asset-tab-content hidden">
+                                    <div id="mdq-quiz-root" class="space-y-4"></div>
                                 </div>
-
-                                <!-- TAB 3: Flash Cards (custom responsive flip card app) -->
-                                <div id="asset-flashcards" class="asset-tab-content space-y-4 hidden">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Quick Recall Flash Cards</h4>
-                                    <div id="flashcard-container" class="flex flex-col items-center">
-                                        <!-- HTML template loaded on render -->
-                                    </div>
+                                <!-- TAB: Flashcards -->
+                                <div id="asset-flashcards" class="asset-tab-content hidden flex flex-col items-center">
+                                    <div id="flashcard-container" class="w-full max-w-md flex flex-col items-center min-h-[250px]"></div>
                                 </div>
-
-                                <!-- TAB 4: Resources (Lesson specific custom files/links) -->
-                                <div id="asset-resources" class="asset-tab-content space-y-4 hidden">
-                                    <h4 class="text-sm font-semibold text-zinc-400">Lesson Material & Code Repositories</h4>
-                                    <ul id="lessonResourcesList" class="space-y-2">
-                                        <!-- JS dynamic appends -->
-                                    </ul>
+                                <!-- TAB: Resources -->
+                                <div id="asset-resources" class="asset-tab-content hidden">
+                                    <ul id="lessonResourcesList" class="space-y-3"></ul>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Welcome / Default view if no lesson is selected -->
-                    <div id="learningHubWelcome" class="p-12 border border-dashed border-zinc-800 bg-zinc-900/10 rounded-xl flex flex-col items-center justify-center text-center space-y-4 h-full">
-                        <div class="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 text-2xl">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-lg">Select a lesson to begin Python Mastery</h3>
-                            <p class="text-zinc-500 text-sm max-w-sm mt-1">Explore 189 dynamic Python lessons complete with interactive video playbacks, self-checking code worksheets, flashcards, and concept maps.</p>
-                        </div>
+                    <!-- Welcome panel shown before lesson selection -->
+                    <div id="learningHubWelcome" class="border border-zinc-800 bg-zinc-900/30 rounded-xl p-12 text-center space-y-4">
+                        <i class="fa-solid fa-graduation-cap text-zinc-700 text-5xl"></i>
+                        <h3 class="text-xl font-bold">Welcome to Python Masterclass</h3>
+                        <p class="text-zinc-400 text-sm max-w-md mx-auto">Select a lesson from the dynamic course syllabus on the left to load its lecture video, interactive mind maps, flashcards, and quizzes.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ==================== PAGE: CONTACT ==================== -->
-        <section id="page-contact" class="page-view max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
-            <div class="space-y-8">
-                <div class="border-b border-zinc-800 pb-6 text-center">
-                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Contact</h1>
-                    <p class="text-zinc-400 text-sm mt-1">Submit inquiries or business requests directly.</p>
+        <section id="page-contact" class="page-view max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+            <div class="border border-zinc-800 bg-zinc-900 p-8 rounded-xl shadow-2xl space-y-6">
+                <div class="text-center">
+                    <i class="fa-solid fa-paper-plane text-blue-500 text-2xl mb-2"></i>
+                    <h2 class="text-2xl font-bold tracking-tight">Get in Touch</h2>
+                    <p class="text-zinc-500 text-xs mt-1">Have questions about the Python course? Send a message.</p>
                 </div>
-                <form id="contactForm" class="space-y-6 vercel-card">
+                <!-- Dynamic contact form handler linked inside app.js -->
+                <form id="contactFormElement" class="space-y-4">
                     <div>
-                        <label for="name" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Name</label>
-                        <input type="text" id="contactName" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors">
+                        <label class="block text-xs font-mono text-zinc-400 mb-1">Your Name</label>
+                        <input type="text" id="contact_name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                     </div>
                     <div>
-                        <label for="email" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Email Address</label>
-                        <input type="email" id="contactEmail" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors">
+                        <label class="block text-xs font-mono text-zinc-400 mb-1">Email Address</label>
+                        <input type="email" id="contact_email" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                     </div>
                     <div>
-                        <label for="message" class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Message</label>
-                        <textarea id="contactMessage" rows="5" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:border-blue-500 transition-colors"></textarea>
+                        <label class="block text-xs font-mono text-zinc-400 mb-1">Message Content</label>
+                        <textarea id="contact_message" required rows="4" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm"></textarea>
                     </div>
-                    <button type="submit" class="w-full btn-primary font-semibold text-sm">Send Secure Message</button>
+                    <button type="submit" class="w-full btn-primary text-sm py-2">Submit Message</button>
                 </form>
             </div>
         </section>
 
-        <!-- ==================== PAGE: ADMIN CONSOLE ==================== -->
+        <!-- ==================== PAGE: PORTAL HUB (ADMIN & STUDENTS) ==================== -->
         <section id="page-admin" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
+
+            <!-- Auth Container (Swaps depending on header dropdown choice) -->
             <div id="adminAuthContainer" class="max-w-md mx-auto space-y-8">
-                <!-- Dynamic Login/Registration Card -->
+                <!-- Dual Login & Student Registration Form -->
                 <div class="border border-zinc-800 bg-zinc-900 p-8 rounded-xl shadow-2xl space-y-6">
                     <div class="text-center">
-                        <i id="authHeaderIcon" class="fa-solid fa-lock text-zinc-600 text-3xl mb-2"></i>
-                        <h2 id="authHeaderTitle" class="text-2xl font-bold tracking-tight">Admin Authentication</h2>
-                        <p id="authHeaderSubtitle" class="text-zinc-500 text-xs mt-1">Authorized site content manipulation panel.</p>
+                        <i class="fa-solid fa-lock text-zinc-600 text-3xl mb-2" id="authHeaderIcon"></i>
+                        <h2 class="text-2xl font-bold tracking-tight" id="authHeaderTitle">Portal Authentication</h2>
+                        <p class="text-zinc-500 text-xs mt-1" id="authHeaderSubtitle">Authorized site administration & premium student registration console.</p>
                     </div>
+
                     <form id="adminLoginForm" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-mono text-zinc-400 mb-1">Email Address</label>
+                            <label class="block text-xs font-mono text-zinc-400 mb-1">Email</label>
                             <input type="email" id="adminEmail" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-mono text-zinc-400 mb-1">Password</label>
                             <input type="password" id="adminPassword" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                         </div>
+
                         <button type="submit" id="adminSubmitBtn" class="w-full btn-primary text-sm py-2">Log In to Console</button>
 
-                        <!-- Google OAuth Single-Sign-On -->
-                        <div class="relative flex py-2 items-center">
+                        <!-- Google OAuth Single-Sign-On Button -->
+                        <div class="relative flex py-2 items-center" id="oauthDivider">
                             <div class="flex-grow border-t border-zinc-800"></div>
                             <span class="flex-shrink mx-4 text-zinc-500 text-[10px] font-mono tracking-widest uppercase">OR</span>
                             <div class="flex-grow border-t border-zinc-800"></div>
                         </div>
 
-                        <button type="button" onclick="signInWithGoogle()" class="w-full bg-white hover:bg-zinc-100 text-zinc-900 font-semibold py-2 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm transition-all shadow-md">
+                        <button type="button" id="googleOAuthBtn" onclick="signInWithGoogle()" class="w-full bg-white hover:bg-zinc-100 text-zinc-900 font-semibold py-2 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm transition-all shadow-md">
                             <svg class="w-4 h-4" viewBox="0 0 24 24">
                                 <path fill="#EA4335" d="M12 5.04c1.61 0 3.09.55 4.23 1.64l3.16-3.16C17.43 1.68 14.9 1 12 1 7.35 1 3.41 3.68 1.57 7.56l3.77 2.92C6.23 6.94 8.89 5.04 12 5.04z"/>
                                 <path fill="#4285F4" d="M23.45 12.3c0-.82-.07-1.6-.21-2.3H12v4.4h6.43c-.28 1.44-1.1 2.67-2.33 3.5l3.6 2.8c2.1-1.94 3.3-4.82 3.3-8.4z"/>
@@ -459,7 +446,7 @@
                             <span>Continue with Google</span>
                         </button>
 
-                        <!-- Student Registration Mode Toggle -->
+                        <!-- Toggle to switch login/register for Student Mode -->
                         <div class="text-center pt-2" id="authModeToggleContainer">
                             <button type="button" id="authModeToggle" onclick="toggleAuthMode()" class="text-xs text-blue-400 hover:text-white font-medium">New Student? Create an Account</button>
                         </div>
@@ -467,7 +454,7 @@
                 </div>
             </div>
 
-            <!-- Secured Admin Workspace Panel (Hidden until Auth confirmation) -->
+            <!-- SECURED VIEW 1: CREATOR ADMIN WORKSPACE PANEL -->
             <div id="adminWorkspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 <!-- Admin Sidebar Controls -->
@@ -477,10 +464,13 @@
                             <p id="adminUserDisplayName" class="font-bold text-sm">Admin Name</p>
                             <span class="text-xs text-zinc-500">Root Access Granted</span>
                         </div>
-                        <button id="adminLogoutBtn" class="text-zinc-500 hover:text-red-400 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>
+                        <button onclick="handleAdminLogout()" class="text-zinc-500 hover:text-red-400 text-xs" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
                     </div>
                     <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-blue-400 bg-blue-500/10 font-semibold flex items-center space-x-2" data-tab="videos">
                         <i class="fa-solid fa-video text-xs"></i><span>Manage Videos</span>
+                    </button>
+                    <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="course_modules">
+                        <i class="fa-solid fa-folder-tree text-xs"></i><span>Manage Modules</span>
                     </button>
                     <button class="admin-nav-btn w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white flex items-center space-x-2" data-tab="lessons">
                         <i class="fa-solid fa-book-bookmark text-xs"></i><span>Manage Lessons</span>
@@ -508,11 +498,11 @@
                         </button>
                     </div>
 
-                    <!-- Add/Edit Modal overlay (Form layout) -->
+                    <!-- Add/Edit CMS Form Container -->
                     <div id="adminCMSFormContainer" class="hidden p-6 rounded-lg bg-zinc-950 border border-zinc-800 space-y-4">
                         <h4 id="adminFormHeaderTitle" class="font-bold text-sm text-zinc-300">Create Video Element</h4>
                         <form id="adminCMSForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Dynamic Inputs fields will load here on runtime depending on active tab -->
+                            <!-- Dynamic Inputs fields load here depending on active tab -->
                             <div class="md:col-span-2 flex justify-end space-x-2 pt-4">
                                 <button type="button" id="adminCancelCMSFormBtn" class="px-4 py-2 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold">Cancel</button>
                                 <button type="submit" class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white">Save Changes</button>
@@ -525,8 +515,8 @@
                         <table class="w-full text-left text-sm text-zinc-300">
                             <thead class="bg-zinc-950 text-xs text-zinc-500 uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-4 py-3">Title</th>
-                                    <th class="px-4 py-3">Unique ID / Slug</th>
+                                    <th class="px-4 py-3" id="adminTableColTitle">Title</th>
+                                    <th class="px-4 py-3" id="adminTableColSlug">Unique ID / Slug</th>
                                     <th class="px-4 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -534,6 +524,80 @@
                                 <!-- JS mapped entries -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECURED VIEW 2: DEDICATED STUDENT PORTAL DASHBOARD -->
+            <div id="studentWorkspace" class="hidden max-w-5xl mx-auto space-y-8">
+                <div class="flex items-center justify-between border-b border-zinc-800 pb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                            <i class="fa-solid fa-graduation-cap text-lg animate-pulse"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-extrabold tracking-tight">Student Dashboard</h1>
+                            <p class="text-zinc-500 text-xs">Welcome to your private study terminal & resources vault.</p>
+                        </div>
+                    </div>
+                    <button onclick="handleAdminLogout()" class="px-3.5 py-1.5 rounded-lg border border-zinc-700 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 text-xs font-semibold text-zinc-400 flex items-center space-x-1.5 transition-all">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Log Out</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    <!-- Left: Progress & Status -->
+                    <div class="md:col-span-8 space-y-6">
+                        <!-- Progress Cards Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-2">
+                                <span class="text-[10px] font-mono tracking-widest text-zinc-500 uppercase">Syllabus Completion</span>
+                                <div class="flex items-baseline space-x-1.5">
+                                    <span id="studentProgressPercent" class="text-3xl font-extrabold text-blue-500">0%</span>
+                                    <span class="text-xs text-zinc-500">of Python Masterclass</span>
+                                </div>
+                                <div class="w-full bg-zinc-950 rounded-full h-1.5 border border-zinc-800">
+                                    <div id="studentProgressBar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-2">
+                                <span class="text-[10px] font-mono tracking-widest text-zinc-500 uppercase">Practice Quiz Metrics</span>
+                                <div class="flex items-baseline space-x-1.5">
+                                    <span id="studentCompletedQuizzes" class="text-3xl font-extrabold text-emerald-500">0</span>
+                                    <span class="text-xs text-zinc-500">graded questions solved</span>
+                                </div>
+                                <p class="text-[10px] text-zinc-500 font-mono">Answers validated on lesson sheets</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress Detail List -->
+                        <div class="border border-zinc-800 bg-zinc-900/30 rounded-xl p-6 space-y-4">
+                            <h4 class="font-bold text-sm tracking-tight border-b border-zinc-800 pb-2">Completed Lecture Syllabus Checklist</h4>
+                            <div id="studentCompletedLessonsList" class="space-y-2 max-h-60 overflow-y-auto pr-2 divide-y divide-zinc-850">
+                                <!-- JS loads syllabus lessons here with checking indicators -->
+                                <p class="text-xs text-zinc-500 py-3 text-center">Open the Learning Hub, study modular syllabus assets, and mark them complete to track your records here!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Private Student Profile Customizer (Doesn't alter Homepage owner details) -->
+                    <div class="md:col-span-4 space-y-6">
+                        <div class="p-6 rounded-xl border border-zinc-800 bg-zinc-900 space-y-4">
+                            <h4 class="font-bold text-sm tracking-tight border-b border-zinc-800 pb-2">Student Account Settings</h4>
+                            <form id="studentProfileForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-mono text-zinc-400 mb-1">Your Full Name</label>
+                                    <input type="text" id="student_full_name" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono text-zinc-400 mb-1">Display Picture URL</label>
+                                    <input type="url" id="student_avatar_url" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                                    <input type="file" id="student_avatar_picker" accept="image/*" class="mt-2 text-[10px] text-zinc-500 block w-full file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" onchange="uploadDeviceFile('student_avatar_picker', 'student_avatar_url')">
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 rounded text-xs transition-colors">Save Profile Settings</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -564,7 +628,7 @@
     <!-- Footer block -->
     <footer class="w-full border-t border-zinc-900 py-6 glass-panel z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500">
-            <p>© 2026 Digital Ground. Created by Moahammad Amaan Khan & hosted on GitHub Pages.</p>
+            <p>© 2026 Digital Ground. Created by Mohammad Amaan Khan & hosted on GitHub Pages.</p>
             <div class="flex space-x-4 mt-2 sm:mt-0">
                 <a href="#about" class="hover:text-white">Profile</a>
                 <a href="#projects" class="hover:text-white">Portfolio</a>
