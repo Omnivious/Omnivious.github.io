@@ -1,8 +1,8 @@
-// Master Client-Side JavaScript Controller (Version 4) - Premium Personal HQ & Gated Learning System
-// Sourced from Creator Digital HQ architecture and optimized for full admin CRUD on GitHub Pages.
+// Master Controller Engine - Dynamic Premium Personal HQ (Version 5)
+// Fully routes between Administrator Console, Gated Student Dashboards, and protects personal portfolio values.
 
 // --- 1. CONFIGURATION & CLIENT INIT ---
-// Update these values with your actual Supabase credentials!
+// Swap these placeholders with your actual Supabase Project Key/URL
 const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 
@@ -30,12 +30,10 @@ const routes = {
     'admin': 'page-admin'
 };
 
-let selectedPortalRole = 'student'; // 'student' or 'admin'
-let isSignUpMode = false;
+let currentPortalViewMode = 'student'; // 'student' or 'admin' depending on dropdown click
 
 function router() {
     let hash = window.location.hash.substring(1) || 'home';
-
     let params = {};
     if (hash.includes('?')) {
         const parts = hash.split('?');
@@ -48,19 +46,10 @@ function router() {
     }
 
     const targetPageId = routes[hash] || 'page-home';
-
-    // Hide all panels
-    document.querySelectorAll('.page-view').forEach(panel => {
-        panel.classList.add('hidden');
-    });
-
-    // Show active panel
+    document.querySelectorAll('.page-view').forEach(panel => panel.classList.add('hidden'));
     const targetPage = document.getElementById(targetPageId);
-    if (targetPage) {
-        targetPage.classList.remove('hidden');
-    }
+    if (targetPage) targetPage.classList.remove('hidden');
 
-    // Nav active styles
     document.querySelectorAll('.nav-link').forEach(link => {
         if (link.getAttribute('data-route') === hash) {
             link.classList.add('active', 'text-white', 'border-b-2', 'border-blue-500');
@@ -78,39 +67,115 @@ function router() {
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', () => {
     router();
+    loadGlobalProfile(); // Hard locks brand to the verified Admin account
     setupGlobalEventListeners();
-    loadGlobalProfile();
 });
 
-// --- 3. DYNAMIC LIFECYCLE HOOKS ---
 function executePageLifecycle(route, params) {
     switch(route) {
-        case 'home':
-            loadHomepageFeatured();
-            break;
-        case 'about':
-            loadAboutProfile();
-            break;
-        case 'projects':
-            loadProjectsShowcase();
-            break;
-        case 'content':
-            loadContentLibrary(params.filter || 'all');
-            break;
-        case 'learning':
-            loadLearningHub(params.lesson);
-            break;
-        case 'admin':
-            checkAdminSession();
-            break;
+        case 'home': loadHomepageFeatured(); break;
+        case 'about': loadAboutProfile(); break;
+        case 'projects': loadProjectsShowcase(); break;
+        case 'content': loadContentLibrary(params.filter || 'all'); break;
+        case 'learning': loadLearningHub(params.lesson); break;
+        case 'admin': checkPortalSession(); break;
     }
 }
 
-// --- 4. DYNAMIC PROFILE SYNC ENGINE ---
+// Global toggle for Portal Header Access Dropdown
+window.togglePortalDropdown = function(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('portalDropdownMenu');
+    dropdown.classList.toggle('hidden');
+};
+
+window.triggerPortalRoute = function(role) {
+    currentPortalViewMode = role;
+    const dropdown = document.getElementById('portalDropdownMenu');
+    dropdown.classList.add('hidden');
+
+    // Smooth navigation into page admin with targeted layout triggers
+    window.location.hash = "admin";
+    updateAuthInterfaceForSelectedRole();
+};
+
+document.addEventListener('click', () => {
+    document.getElementById('portalDropdownMenu')?.classList.add('hidden');
+});
+
+// Update standard Auth container header states based on selected Portal mode
+function updateAuthInterfaceForSelectedRole() {
+    const authHeaderTitle = document.getElementById('authHeaderTitle');
+    const authHeaderSubtitle = document.getElementById('authHeaderSubtitle');
+    const authHeaderIcon = document.getElementById('authHeaderIcon');
+    const submitBtn = document.getElementById('adminSubmitBtn');
+
+    // Elements to show or hide completely for security
+    const authToggle = document.getElementById('authModeToggleContainer');
+    const oauthDivider = document.getElementById('oauthDivider');
+    const googleBtn = document.getElementById('googleOAuthBtn');
+
+    if (currentPortalViewMode === 'admin') {
+        authHeaderTitle.textContent = "Creator Portal";
+        authHeaderSubtitle.textContent = "Authorized portfolio & curriculum administrator space.";
+        authHeaderIcon.className = "fa-solid fa-user-shield text-purple-500 text-3xl mb-2";
+        submitBtn.textContent = "Login to Console";
+
+        // Hide new registration tools on admin login to secure endpoint
+        if (authToggle) authToggle.classList.add('hidden');
+        if (oauthDivider) oauthDivider.classList.add('hidden');
+        if (googleBtn) googleBtn.classList.add('hidden');
+    } else {
+        authHeaderTitle.textContent = "Student Workspace";
+        authHeaderSubtitle.textContent = "Register credentials or login with Google to unlock course materials.";
+        authHeaderIcon.className = "fa-solid fa-graduation-cap text-blue-500 text-3xl mb-2";
+        submitBtn.textContent = isSignUpMode ? "Register Student Account" : "Access Workspace";
+
+        if (authToggle) authToggle.classList.remove('hidden');
+        if (oauthDivider) oauthDivider.classList.remove('hidden');
+        if (googleBtn) googleBtn.classList.remove('hidden');
+    }
+}
+
+// --- 3. DYNAMIC DEVICE UPLOAD TRIGGER ---
+async function uploadDeviceFile(fileInputId, targetUrlInputId) {
+    const fileInput = document.getElementById(fileInputId);
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    try {
+        const urlInput = document.getElementById(targetUrlInputId);
+        if (urlInput) urlInput.value = "Uploading file... please wait...";
+
+        const { data, error } = await supabaseClient.storage
+            .from('assets')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabaseClient.storage
+            .from('assets')
+            .getPublicUrl(filePath);
+
+        if (urlInput) {
+            urlInput.value = publicUrl;
+        }
+        alert("Success! The image was successfully saved to your storage bucket, and is now linked to your form!");
+    } catch (err) {
+        alert(`Device file upload failed: ${err.message}. (Ensure bucket "assets" exists in Supabase and is public!)`);
+    }
+}
+
+// --- 4. HARD-LOCKED DYNAMIC PROFILE SYNC (PORTFOLIO LOCK) ---
 async function loadGlobalProfile() {
     if (!supabaseClient) return;
 
     try {
+        // ALWAYS loads the verified admin profile to represent the portfolio
         const { data: profile, error } = await supabaseClient
             .from('profiles')
             .select('*')
@@ -120,11 +185,10 @@ async function loadGlobalProfile() {
 
         if (error || !profile) return;
 
-        // Sync home profile card elements
+        // Keep homepage card and about me details locked to your personal details
         const heroName = document.getElementById('heroProfileName');
         if (heroName) heroName.textContent = `"${profile.full_name}"`;
 
-        // Sync about profile card elements
         const aboutDP = document.getElementById('aboutProfileDP');
         const aboutIcon = document.getElementById('aboutProfileUserIcon');
         const aboutName = document.getElementById('aboutProfileName');
@@ -145,8 +209,37 @@ async function loadGlobalProfile() {
                 aboutIcon.classList.remove('hidden');
             }
         }
+
+        const ghLink = document.getElementById('profileGithubLink');
+        const liLink = document.getElementById('profileLinkedinLink');
+        const ytLink = document.getElementById('profileYoutubeLink');
+
+        if (ghLink) {
+            if (profile.github_link && profile.github_link.trim() !== '') {
+                ghLink.href = profile.github_link;
+                ghLink.classList.remove('hidden');
+            } else {
+                ghLink.classList.add('hidden');
+            }
+        }
+        if (liLink) {
+            if (profile.linkedin_link && profile.linkedin_link.trim() !== '') {
+                liLink.href = profile.linkedin_link;
+                liLink.classList.remove('hidden');
+            } else {
+                liLink.classList.add('hidden');
+            }
+        }
+        if (ytLink) {
+            if (profile.youtube_link && profile.youtube_link.trim() !== '') {
+                ytLink.href = profile.youtube_link;
+                ytLink.classList.remove('hidden');
+            } else {
+                ytLink.classList.add('hidden');
+            }
+        }
     } catch (e) {
-        console.warn("Global profile sync warning:", e);
+        console.warn("Global profile load exception.", e);
     }
 }
 
@@ -154,11 +247,7 @@ async function loadGlobalProfile() {
 async function loadHomepageFeatured() {
     const grid = document.getElementById('featuredCourseGrid');
     if (!grid) return;
-
-    if (!supabaseClient) {
-        grid.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { grid.innerHTML = getSupabaseWarningHTML(); return; }
 
     const { data: featured, error } = await supabaseClient
         .from('courses')
@@ -188,7 +277,7 @@ async function loadHomepageFeatured() {
 }
 
 async function loadAboutProfile() {
-    await loadGlobalProfile(); // Keep profile details completely updated
+    loadGlobalProfile();
     const list = document.getElementById('achievementsList');
     if (!list) return;
 
@@ -199,7 +288,10 @@ async function loadAboutProfile() {
         .select('*')
         .order('date_achieved', { ascending: false });
 
-    if (error || !achievements || achievements.length === 0) return;
+    if (error || !achievements || achievements.length === 0) {
+        list.innerHTML = `<div class="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800 text-center text-xs text-zinc-500 font-mono py-6">No milestones recorded yet. Add them in your Admin panel!</div>`;
+        return;
+    }
 
     list.innerHTML = achievements.map(ach => `
         <div class="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center justify-between">
@@ -218,11 +310,7 @@ async function loadAboutProfile() {
 async function loadProjectsShowcase() {
     const grid = document.getElementById('projectsGrid');
     if (!grid) return;
-
-    if (!supabaseClient) {
-        grid.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { grid.innerHTML = getSupabaseWarningHTML(); return; }
 
     const { data: projects, error } = await supabaseClient
         .from('projects')
@@ -234,7 +322,6 @@ async function loadProjectsShowcase() {
         return;
     }
 
-    // Projects Grid renders short summary. Rich specifications are gated.
     grid.innerHTML = projects.map(proj => `
         <div class="vercel-card flex flex-col justify-between">
             <div class="space-y-4">
@@ -262,14 +349,14 @@ async function loadProjectsShowcase() {
     `).join('');
 }
 
-// Authenticated popup window mapping rich Markdown descriptions
 window.viewProjectDetails = async function(projectId) {
     if (!supabaseClient) return;
 
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
-        alert("🔐 Members Only: Please register a student account or log in to view project technical write-ups and blueprints.");
-        navigateToLogin('student');
+        alert("🔐 Members Only: Please register a student account or log in to view project technical write-ups.");
+        window.location.hash = "admin";
+        triggerPortalRoute('student');
         return;
     }
 
@@ -288,7 +375,7 @@ window.viewProjectDetails = async function(projectId) {
     modal.className = "fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4";
     modal.id = "temp-project-modal";
 
-    const processedDesc = typeof marked !== 'undefined' ? marked.parse(project.description || '*No detailed specs recorded.*') : (project.description || '');
+    const processedDesc = typeof marked !== 'undefined' ? marked.parse(project.description || '*No detailed specifications recorded.*') : (project.description || '');
 
     modal.innerHTML = `
         <div class="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -304,7 +391,6 @@ window.viewProjectDetails = async function(projectId) {
     document.body.appendChild(modal);
 };
 
-// Dynamic modal viewer for Technical Articles
 window.viewArticleModal = async function(articleSlug) {
     if (!supabaseClient) return;
 
@@ -342,14 +428,9 @@ window.viewArticleModal = async function(articleSlug) {
 async function loadContentLibrary(filter) {
     const grid = document.getElementById('contentLibraryGrid');
     if (!grid) return;
-
-    if (!supabaseClient) {
-        grid.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { grid.innerHTML = getSupabaseWarningHTML(); return; }
 
     grid.innerHTML = '<div class="col-span-3 py-12 flex justify-center"><i class="fa-solid fa-spinner animate-spin text-2xl text-blue-500"></i></div>';
-
     let contentItems = [];
 
     if (filter === 'all' || filter === 'videos') {
@@ -424,11 +505,7 @@ async function loadContentLibrary(filter) {
 async function loadLearningHub(activeLessonSlug) {
     const syllabus = document.getElementById('courseSyllabusContainer');
     if (!syllabus) return;
-
-    if (!supabaseClient) {
-        syllabus.innerHTML = getSupabaseWarningHTML();
-        return;
-    }
+    if (!supabaseClient) { syllabus.innerHTML = getSupabaseWarningHTML(); return; }
 
     const { data: modules, error } = await supabaseClient
         .from('course_modules')
@@ -439,13 +516,12 @@ async function loadLearningHub(activeLessonSlug) {
         .order('position', { ascending: true });
 
     if (error || !modules || modules.length === 0) {
-        syllabus.innerHTML = `<div class="text-zinc-500 text-xs text-center py-6">Syllabus is empty. Initialize via the Admin workspace.</div>`;
+        syllabus.innerHTML = `<div class="text-zinc-500 text-xs text-center py-6">Syllabus is empty. Initialize Modules inside the Admin panel.</div>`;
         return;
     }
 
     syllabus.innerHTML = modules.map(mod => {
         const sortedLessons = mod.lessons ? mod.lessons.sort((a,b) => a.position - b.position) : [];
-
         return `
             <div class="space-y-1.5 border-b border-zinc-800 pb-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-500 px-1.5 py-1 mb-1 flex items-center space-x-1">
@@ -481,17 +557,16 @@ async function loadLessonDetail(slug) {
 
     const { data: lesson, error } = await supabaseClient
         .from('lessons')
-        .select(`
-            *,
-            videos ( youtube_id, duration )
-        `)
+        .select(`*, videos ( youtube_id, duration )`)
         .eq('slug', slug)
         .single();
 
     if (error || !lesson) return;
 
-    document.getElementById('lessonTitle').textContent = lesson.title;
-    document.getElementById('lessonDuration').textContent = lesson.videos?.duration || '00:00';
+    const lessonTitle = document.getElementById('lessonTitle');
+    const lessonDuration = document.getElementById('lessonDuration');
+    if (lessonTitle) lessonTitle.textContent = lesson.title;
+    if (lessonDuration) lessonDuration.textContent = lesson.videos?.duration || '00:00';
 
     const videoIframe = document.getElementById('lessonVideoIframe');
     if (videoIframe) {
@@ -508,7 +583,7 @@ async function loadLessonDetail(slug) {
     renderResourcesTab(lesson.resources_json);
 }
 
-// --- 6. INTERACTIVE EDUCATIONAL MODULE ENGINES ---
+// --- EDUCATIONAL COMPONENT PARSERS ---
 function renderMindmapTab(markdownContent) {
     const svgEl = document.getElementById('markmap-svg');
     if (!svgEl) return;
@@ -569,6 +644,7 @@ window.gradeLocalQuiz = function(questions) {
             if (answerIndex === q.correct_index) {
                 feedback.textContent = `✓ Correct! ${q.explanation || ''}`;
                 feedback.classList.add('text-green-400');
+                recordLocalGradedQuizScore();
             } else {
                 feedback.textContent = `✗ Incorrect. Correct answer: "${q.options[q.correct_index]}". ${q.explanation || ''}`;
                 feedback.classList.add('text-red-400');
@@ -576,10 +652,19 @@ window.gradeLocalQuiz = function(questions) {
         } else {
             feedback.textContent = `⚠ Please select an answer.`;
             feedback.classList.add('text-zinc-500');
-            feedback.classList.remove('hidden');
         }
     });
 };
+
+function recordLocalGradedQuizScore() {
+    let score = parseInt(localStorage.getItem('quizzes_score_total') || '0');
+    score++;
+    localStorage.setItem('quizzes_score_total', score.toString());
+
+    // Sync current metrics live onto active view
+    const metricsEl = document.getElementById('studentCompletedQuizzes');
+    if (metricsEl) metricsEl.textContent = score.toString();
+}
 
 let currentCardIndex = 0;
 let lessonFlashcards = [];
@@ -601,7 +686,7 @@ function renderFlashcardsTab(cards) {
 
 function showFlashcard(index) {
     const container = document.getElementById('flashcard-container');
-    if (lessonFlashcards.length === 0) return;
+    if (!container || lessonFlashcards.length === 0) return;
 
     const card = lessonFlashcards[index];
     container.innerHTML = `
@@ -612,7 +697,7 @@ function showFlashcard(index) {
                     <p class="font-bold text-sm text-center text-white">${card.front}</p>
                     <span class="text-[10px] text-zinc-600 mt-6"><i class="fa-solid fa-rotate-left mr-1"></i>Click to reveal</span>
                 </div>
-                <div class="flashcard-inner flashcard-back bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-500/30 flex flex-col items-center justify-center p-6 rounded-xl">
+                <div class="flashcard-back">
                     <span class="text-xs text-sky-400 font-mono tracking-widest uppercase mb-4">Answer Explanation</span>
                     <p class="text-sm font-semibold text-center">${card.back}</p>
                 </div>
@@ -640,6 +725,7 @@ window.nextFlashcard = function() {
     }
 };
 
+// Premium Lockout mapping on resources folder
 async function renderResourcesTab(resources) {
     const list = document.getElementById('lessonResourcesList');
     if (!list) return;
@@ -654,8 +740,8 @@ async function renderResourcesTab(resources) {
             <li class="p-6 rounded-lg bg-blue-500/5 border border-blue-500/10 text-center space-y-3">
                 <i class="fa-solid fa-lock text-blue-500 text-lg"></i>
                 <p class="text-xs font-semibold text-zinc-300">Downloadable Resources are Locked</p>
-                <p class="text-[11px] text-zinc-500 max-w-xs mx-auto">Please create a student account or log in via the Admin/Portal page to download Python source codes and cheatsheets.</p>
-                <a href="#admin" onclick="navigateToLogin('student')" class="inline-block mt-2 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-[10px] font-bold text-white transition-colors">Log In / Sign Up</a>
+                <p class="text-[11px] text-zinc-500 max-w-xs mx-auto">Please create a student account or log in via the Portal menu to download Python source codes and cheatsheets.</p>
+                <a href="#admin" onclick="triggerPortalRoute('student')" class="inline-block mt-2 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-[10px] font-bold text-white transition-colors">Log In / Sign Up</a>
             </li>
         `;
         return;
@@ -679,51 +765,224 @@ async function renderResourcesTab(resources) {
     `).join('');
 }
 
-
-// --- 7. SECURED CREATOR ADMIN BACKEND (CMS CRUD IMPLEMENTATION) ---
+// --- 6. ROLE ROUTING & PORTAL MANAGEMENT SESSION ENGINE ---
 let currentAdminTab = 'videos';
 let loadedAdminData = [];
 let isEditMode = false;
 let editingRecordId = null;
 
-async function checkAdminSession() {
+async function checkPortalSession() {
     const authContainer = document.getElementById('adminAuthContainer');
     const workspace = document.getElementById('adminWorkspace');
-    if (!authContainer || !workspace) return;
+    const studentWorkspace = document.getElementById('studentWorkspace');
+    if (!authContainer || !workspace || !studentWorkspace) return;
 
     if (!supabaseClient) {
         authContainer.innerHTML = getSupabaseWarningHTML();
         return;
     }
 
-    const { data: session } = await supabaseClient.auth.getSession();
-    if (session && session.session) {
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    if (sessionData && sessionData.session) {
         authContainer.classList.add('hidden');
-        workspace.classList.remove('hidden');
-        loadAdminUserMetadata(session.session.user);
-        loadAdminContentList();
+
+        // Fetch user profile properties to confirm authorization level
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', sessionData.session.user.id)
+            .single();
+
+        if (profile?.is_admin === true) {
+            // Logged in as Administrator
+            workspace.classList.remove('hidden');
+            studentWorkspace.classList.add('hidden');
+            document.getElementById('adminUserDisplayName').textContent = profile.full_name;
+            loadAdminContentList();
+        } else {
+            // Logged in as Student
+            workspace.classList.add('hidden');
+            studentWorkspace.classList.remove('hidden');
+            loadStudentDashboardDetails(sessionData.session.user, profile);
+        }
     } else {
         authContainer.classList.remove('hidden');
         workspace.classList.add('hidden');
-        renderAuthFormUI();
+        studentWorkspace.classList.add('hidden');
+        updateAuthInterfaceForSelectedRole();
     }
 }
 
-async function loadAdminUserMetadata(user) {
-    const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-    document.getElementById('adminUserDisplayName').textContent = profile?.full_name || user.email;
+// Loads student account metrics and checks completed lists
+async function loadStudentDashboardDetails(user, profile) {
+    const nameInput = document.getElementById('student_full_name');
+    const avatarInput = document.getElementById('student_avatar_url');
+    if (nameInput) nameInput.value = profile?.full_name || '';
+    if (avatarInput) avatarInput.value = profile?.avatar_url || '';
+
+    // Load completed questions metrics
+    const scoreVal = parseInt(localStorage.getItem('quizzes_score_total') || '0');
+    document.getElementById('studentCompletedQuizzes').textContent = scoreVal.toString();
+
+    // Fetch master curriculum syllabus details to render visual checklist progress bar
+    const checklist = document.getElementById('studentCompletedLessonsList');
+    if (!checklist) return;
+
+    const { data: lessons } = await supabaseClient
+        .from('lessons')
+        .select('id, title, slug')
+        .order('position', { ascending: true });
+
+    if (!lessons || lessons.length === 0) {
+        checklist.innerHTML = `<p class="text-xs text-zinc-500 py-4 text-center font-mono">Curriculum courses empty.</p>`;
+        return;
+    }
+
+    const localKey = 'completed_lessons_v5_' + user.id;
+    let completedSlugs = JSON.parse(localStorage.getItem(localKey) || '[]');
+
+    // Calculate percentage bar
+    const totalCount = lessons.length;
+    const completedCount = completedSlugs.length;
+    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    document.getElementById('studentProgressPercent').textContent = `${percentage}%`;
+    document.getElementById('studentProgressBar').style.width = `${percentage}%`;
+
+    checklist.innerHTML = lessons.map(les => {
+        const isChecked = completedSlugs.includes(les.slug);
+        return `
+            <div class="flex items-center justify-between py-2 text-xs">
+                <span class="text-zinc-300 truncate pr-4">${les.title}</span>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <span class="text-[10px] font-mono ${isChecked ? 'text-blue-400' : 'text-zinc-500'}">${isChecked ? 'Completed' : 'Mark Done'}</span>
+                    <input type="checkbox" onchange="toggleSyllabusCompletion('${les.slug}', '${user.id}', this.checked)" ${isChecked ? 'checked' : ''} class="text-blue-500 bg-zinc-950 border-zinc-800 rounded focus:ring-0">
+                </label>
+            </div>
+        `;
+    }).join('');
 }
 
+window.toggleSyllabusCompletion = function(lessonSlug, userId, isChecked) {
+    const localKey = 'completed_lessons_v5_' + userId;
+    let completedSlugs = JSON.parse(localStorage.getItem(localKey) || '[]');
+
+    if (isChecked) {
+        if (!completedSlugs.includes(lessonSlug)) completedSlugs.push(lessonSlug);
+    } else {
+        completedSlugs = completedSlugs.filter(slug => slug !== lessonSlug);
+    }
+
+    localStorage.setItem(localKey, JSON.stringify(completedSlugs));
+
+    // Smooth rerender of progress numbers
+    const { data: sessionData } = supabaseClient.auth.getSession();
+    if (sessionData && sessionData.session) {
+        loadStudentDashboardDetails(sessionData.session.user);
+    }
+};
+
+// Handle student profile updates
+document.getElementById('studentProfileForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!supabaseClient) return;
+
+    const full_name = document.getElementById('student_full_name').value;
+    const avatar_url = document.getElementById('student_avatar_url').value;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabaseClient
+        .from('profiles')
+        .update({ full_name, avatar_url })
+        .eq('id', session.user.id);
+
+    if (error) {
+        alert("Failed to update student profile: " + error.message);
+    } else {
+        alert("Student profile updated successfully!");
+        checkPortalSession();
+    }
+});
+
+// --- 7. SECURED CREATOR ADMIN BACKEND (CMS CRUD IMPLEMENTATION) ---
 async function loadAdminContentList() {
     const tbody = document.getElementById('adminCMSTableBody');
     if (!tbody) return;
 
     const tableContainer = tbody.closest('.overflow-x-auto');
     const addBtn = document.getElementById('adminAddNewContentBtn');
+
+    // Dynamic Table Head titles
+    const colTitle = document.getElementById('adminTableColTitle');
+    const colSlug = document.getElementById('adminTableColSlug');
+
+    // Special Case: Manage Messages (Contact Inbox Panel)
+    if (currentAdminTab === 'contact_submissions') {
+        if (tableContainer) tableContainer.classList.remove('hidden');
+        if (addBtn) addBtn.classList.add('hidden'); // No adding messages manually
+
+        colTitle.textContent = "Sender Name";
+        colSlug.textContent = "Email Address";
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-6"><i class="fa-solid fa-spinner animate-spin text-blue-500"></i></td></tr>';
+
+        const { data: submissions, error } = await supabaseClient
+            .from('contact_submissions')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-xs text-red-400 py-6">Fetch Error: ${error.message}</td></tr>`;
+            return;
+        }
+
+        if (!submissions || submissions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-zinc-500 text-xs py-6">Your inbox is currently empty!</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = submissions.map(msg => `
+            <tr class="hover:bg-zinc-900/50">
+                <td class="px-4 py-3 font-semibold text-white max-w-xs truncate">${msg.name}</td>
+                <td class="px-4 py-3 font-mono text-xs text-zinc-500">${msg.email}</td>
+                <td class="px-4 py-3 text-right space-x-1.5">
+                    <button onclick="viewContactMessageDetails('${msg.id}')" class="text-blue-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-blue-600 transition-colors" title="Read Message"><i class="fa-solid fa-eye"></i></button>
+                    <button onclick="deleteContactMessage('${msg.id}')" class="text-red-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-red-600 transition-colors" title="Delete Message"><i class="fa-solid fa-trash-can"></i></button>
+                </td>
+            </tr>
+        `).join('');
+        return;
+    }
+
+    // Special Case: Manage Profile (Direct Form render)
+    if (currentAdminTab === 'profiles') {
+        if (tableContainer) tableContainer.classList.add('hidden');
+        if (addBtn) addBtn.classList.add('hidden');
+        tbody.innerHTML = '';
+
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        if (!userId) return;
+
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-xs text-red-400 py-6">Profile Fetch Error: ${error.message}</td></tr>`;
+            return;
+        }
+
+        showAdminCMSForm(true, userId, profile);
+        return;
+    }
+
+    // Reset back table column headers
+    colTitle.textContent = "Title";
+    colSlug.textContent = "Unique ID / Slug";
 
     if (tableContainer) tableContainer.classList.remove('hidden');
     if (addBtn) addBtn.classList.remove('hidden');
@@ -747,77 +1006,57 @@ async function loadAdminContentList() {
         return;
     }
 
-    // Custom listing UI based on admin tabs for premium experience
-    if (currentAdminTab === 'profiles') {
-        if (addBtn) addBtn.classList.add('hidden'); // Disable adding arbitrary auth profiles manually on UI
-        tbody.innerHTML = data.map(item => `
+    // Fixed profile column maps using "full_name" rather than untitled titles
+    tbody.innerHTML = data.map(item => {
+        const titleText = item.title || item.name || item.full_name || 'Untitled';
+        return `
             <tr class="hover:bg-zinc-900/50">
-                <td class="px-4 py-3 font-semibold text-white max-w-xs truncate">${item.full_name || 'Anonymous User'}</td>
-                <td class="px-4 py-3 font-mono text-xs text-zinc-500">
-                    ${item.is_admin ? '<span class="px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400 font-semibold text-[10px]">ADMIN</span>' : '<span class="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-semibold text-[10px]">STUDENT</span>'}
-                </td>
+                <td class="px-4 py-3 font-semibold text-white max-w-xs truncate">${titleText}</td>
+                <td class="px-4 py-3 font-mono text-xs text-zinc-500">${item.slug || item.id}</td>
                 <td class="px-4 py-3 text-right space-x-1">
                     <button onclick="editAdminRecord('${item.id}')" class="text-blue-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-blue-600 transition-colors"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button onclick="deleteAdminRecord('${item.id}')" class="text-red-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-red-600 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                 </td>
             </tr>
-        `).join('');
-        return;
-    }
-
-    if (currentAdminTab === 'contact_submissions') {
-        if (addBtn) addBtn.classList.add('hidden'); // Disable manual mock insertion
-        tbody.innerHTML = data.map(item => `
-            <tr class="hover:bg-zinc-900/50">
-                <td class="px-4 py-3 font-semibold text-white max-w-xs truncate">${item.name} <span class="text-zinc-500 font-normal text-xs">&lt;${item.email}&gt;</span></td>
-                <td class="px-4 py-3 text-xs text-zinc-400 max-w-md truncate">${item.message}</td>
-                <td class="px-4 py-3 text-right space-x-1">
-                    <button onclick="viewContactMessage('${item.id}')" class="text-blue-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-blue-600 transition-colors" title="View Full Message"><i class="fa-solid fa-eye"></i></button>
-                    <button onclick="deleteAdminRecord('${item.id}')" class="text-red-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-red-600 transition-colors" title="Delete Message"><i class="fa-solid fa-trash-can"></i></button>
-                </td>
-            </tr>
-        `).join('');
-        return;
-    }
-
-    tbody.innerHTML = data.map(item => `
-        <tr class="hover:bg-zinc-900/50">
-            <td class="px-4 py-3 font-semibold text-white max-w-xs truncate">${item.title || item.name || 'Untitled'}</td>
-            <td class="px-4 py-3 font-mono text-xs text-zinc-500">${item.slug || item.id}</td>
-            <td class="px-4 py-3 text-right space-x-1">
-                <button onclick="editAdminRecord('${item.id}')" class="text-blue-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-blue-600 transition-colors"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button onclick="deleteAdminRecord('${item.id}')" class="text-red-500 hover:text-white text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-red-600 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
-            </td>
-        </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
-window.viewContactMessage = function(id) {
-    const record = loadedAdminData.find(d => d.id === id);
-    if (!record) return;
+// Eye button Modal reader for Inbox submissions
+window.viewContactMessageDetails = async function(messageId) {
+    const { data: msg, error } = await supabaseClient
+        .from('contact_submissions')
+        .select('*')
+        .eq('id', messageId)
+        .single();
+
+    if (error || !msg) {
+        alert("Failed to load message: " + error.message);
+        return;
+    }
 
     const modal = document.createElement('div');
     modal.className = "fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4";
-    modal.id = "temp-message-modal";
+    modal.id = "temp-msg-modal";
 
     modal.innerHTML = `
-        <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col max-h-[80vh]">
+        <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
             <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
-                <h3 class="font-bold text-base text-white">Contact Message</h3>
-                <button onclick="document.getElementById('temp-message-modal').remove()" class="text-zinc-500 hover:text-white text-xs px-2.5 py-1.5 rounded bg-zinc-800"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="font-bold text-sm text-white">Message from ${msg.name}</h3>
+                <button onclick="document.getElementById('temp-msg-modal').remove()" class="text-zinc-500 hover:text-white text-xs px-2 py-1 rounded bg-zinc-800"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto space-y-4 text-sm text-zinc-300">
+            <div class="p-6 space-y-4 text-xs leading-relaxed">
                 <div>
-                    <span class="text-xs font-mono text-zinc-500 uppercase block">From</span>
-                    <span class="font-semibold text-white">${record.name} (${record.email})</span>
+                    <span class="text-zinc-500 block font-mono">Email Address</span>
+                    <a href="mailto:${msg.email}" class="text-blue-400 font-semibold hover:underline">${msg.email}</a>
                 </div>
                 <div>
-                    <span class="text-xs font-mono text-zinc-500 uppercase block">Sent At</span>
-                    <span class="text-xs text-zinc-400 font-mono">${new Date(record.created_at).toLocaleString()}</span>
+                    <span class="text-zinc-500 block font-mono">Submitted On</span>
+                    <span class="text-zinc-300 font-mono">${new Date(msg.created_at).toLocaleString()}</span>
                 </div>
-                <div class="border-t border-zinc-800 pt-4">
-                    <span class="text-xs font-mono text-zinc-500 uppercase block mb-1">Message</span>
-                    <p class="whitespace-pre-wrap leading-relaxed text-zinc-200 bg-zinc-950 p-4 rounded-lg border border-zinc-800/50">${record.message}</p>
+                <div class="border-t border-zinc-800 pt-3">
+                    <span class="text-zinc-500 block font-mono mb-1">Message Content</span>
+                    <p class="text-zinc-200 bg-zinc-950 p-3 rounded-lg border border-zinc-850 whitespace-pre-wrap">${msg.message}</p>
                 </div>
             </div>
         </div>
@@ -825,25 +1064,32 @@ window.viewContactMessage = function(id) {
     document.body.appendChild(modal);
 };
 
+window.deleteContactMessage = async function(messageId) {
+    if (!confirm("Delete this submission permanently?")) return;
+
+    const { error } = await supabaseClient
+        .from('contact_submissions')
+        .delete()
+        .eq('id', messageId);
+
+    if (error) {
+        alert("Failed to delete submission: " + error.message);
+    } else {
+        alert("Message successfully deleted!");
+        loadAdminContentList();
+    }
+};
+
 window.editAdminRecord = function(id) {
     const record = loadedAdminData.find(item => item.id === id);
     if (!record) return;
     showAdminCMSForm(true, id, record);
-}
+};
 
 window.deleteAdminRecord = async function(id) {
-    if (currentAdminTab === 'profiles') {
-        const confirmDelete = confirm(
-            "🔐 IMPORTANT NOTE ON PROFILES DELETION:\n\n" +
-            "Deleting a profile row from the public database table DOES NOT delete their login credentials from Supabase Authentication.\n\n" +
-            "If this user/student logs in again, their profile row will automatically be recreated by the database trigger.\n\n" +
-            "To permanently delete this account, please do so from your Supabase Dashboard -> Authentication -> Users tab.\n\n" +
-            "Do you still want to delete this profile row?"
-        );
-        if (!confirmDelete) return;
-    } else {
-        if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
-    }
+    // Alerting user of standard Supabase Cascade Auth rules
+    const confirmText = "Confirm Record Deletion? Note: If deleting a profile, you MUST also manually delete their authentication credentials inside your Supabase dashboard (Authentication -> Users) or their profile row will reappear upon their next login session!";
+    if (!confirm(confirmText)) return;
 
     const { error } = await supabaseClient
         .from(currentAdminTab)
@@ -853,10 +1099,11 @@ window.deleteAdminRecord = async function(id) {
     if (error) {
         alert(`Delete failed: ${error.message}`);
     } else {
-        alert("Record successfully deleted!");
+        alert("Record successfully wiped!");
         loadAdminContentList();
+        loadGlobalProfile();
     }
-}
+};
 
 async function showAdminCMSForm(isEdit, recordId = null, record = null) {
     isEditMode = isEdit;
@@ -867,9 +1114,9 @@ async function showAdminCMSForm(isEdit, recordId = null, record = null) {
     if (!formContainer || !headerTitle) return;
 
     if (isEdit) {
-        headerTitle.textContent = `Edit ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1).replace('_', ' ')} Entry`;
+        headerTitle.textContent = `Edit ${currentAdminTab.split('_').join(' ').toUpperCase()} Entry`;
     } else {
-        headerTitle.textContent = `Create New ${currentAdminTab.charAt(0).toUpperCase() + currentAdminTab.slice(1).replace('_', ' ')} Entry`;
+        headerTitle.textContent = `Create New ${currentAdminTab.split('_').join(' ').toUpperCase()} Entry`;
     }
 
     await setupAdminFormFields(record);
@@ -926,6 +1173,33 @@ async function setupAdminFormFields(record = null) {
             <div class="flex items-center space-x-3 pt-6">
                 <input type="checkbox" name="is_featured" id="is_featured" ${record?.is_featured ? 'checked' : ''} class="text-blue-500 focus:ring-0 rounded bg-zinc-900 border-zinc-800">
                 <label for="is_featured" class="text-xs font-mono text-zinc-400">Featured Content</label>
+            </div>
+        `;
+    } else if (currentAdminTab === 'course_modules') {
+        let coursesOptions = '';
+        try {
+            const { data: courses } = await supabaseClient.from('courses').select('id, title');
+            if (courses) {
+                coursesOptions = courses.map(c => `<option value="${c.id}" ${record?.course_id === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+            }
+        } catch (e) {
+            console.error("Error loading courses selection", e);
+        }
+
+        inputsHTML = `
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Module Title</label>
+                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Parent Course</label>
+                <select name="course_id" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                    ${coursesOptions}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Syllabus Order Position</label>
+                <input type="number" name="position" required value="${record?.position || '1'}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
         `;
     } else if (currentAdminTab === 'lessons') {
@@ -1007,7 +1281,8 @@ async function setupAdminFormFields(record = null) {
             </div>
             <div>
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Banner Image URL</label>
-                <input type="url" name="image_url" value="${record?.image_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                <input type="url" name="image_url" id="project_image_url_val" value="${record?.image_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                <input type="file" id="project_file_picker" accept="image/*" class="mt-2 text-xs text-zinc-500 block w-full file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" onchange="uploadDeviceFile('project_file_picker', 'project_image_url_val')">
             </div>
             <div>
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Live Demo URL</label>
@@ -1033,33 +1308,6 @@ async function setupAdminFormFields(record = null) {
             <div class="flex items-center space-x-3 pt-6">
                 <input type="checkbox" name="is_featured" id="proj_featured" ${record?.is_featured ? 'checked' : ''} class="text-blue-500 focus:ring-0 rounded bg-zinc-900 border-zinc-800">
                 <label for="proj_featured" class="text-xs font-mono text-zinc-400">Featured Project</label>
-            </div>
-        `;
-    } else if (currentAdminTab === 'course_modules') {
-        let coursesOptions = '';
-        try {
-            const { data: courses } = await supabaseClient.from('courses').select('id, title');
-            if (courses) {
-                coursesOptions = courses.map(c => `<option value="${c.id}" ${record?.course_id === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
-            }
-        } catch (e) {
-            console.error("Error loading courses selection", e);
-        }
-
-        inputsHTML = `
-            <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Module Title</label>
-                <input type="text" name="title" required value="${record?.title || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Parent Course</label>
-                <select name="course_id" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
-                    ${coursesOptions}
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Syllabus Order Position</label>
-                <input type="number" name="position" required value="${record?.position || '1'}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
         `;
     } else if (currentAdminTab === 'posts') {
@@ -1100,20 +1348,29 @@ async function setupAdminFormFields(record = null) {
     } else if (currentAdminTab === 'profiles') {
         inputsHTML = `
             <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Display / Full Name (Title Column of Profile)</label>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Display/Full Name</label>
                 <input type="text" name="full_name" required value="${record?.full_name || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-mono text-zinc-400 mb-1">Display Picture (Avatar URL)</label>
-                <input type="url" name="avatar_url" value="${record?.avatar_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                <input type="url" name="avatar_url" id="admin_avatar_url_val" value="${record?.avatar_url || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+                <input type="file" id="admin_avatar_file_picker" accept="image/*" class="mt-2 text-xs text-zinc-500 block w-full file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" onchange="uploadDeviceFile('admin_avatar_file_picker', 'admin_avatar_url_val')">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">GitHub Profile Link</label>
+                <input type="url" name="github_link" value="${record?.github_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">LinkedIn Profile Link</label>
+                <input type="url" name="linkedin_link" value="${record?.linkedin_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">YouTube Channel Link</label>
+                <input type="url" name="youtube_link" value="${record?.youtube_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
             <div class="md:col-span-2">
-                <label class="block text-xs font-mono text-zinc-400 mb-1">Biography / About Me Statement</label>
-                <textarea name="bio" rows="4" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.bio || ''}</textarea>
-            </div>
-            <div class="flex items-center space-x-3 pt-6">
-                <input type="checkbox" name="is_admin" id="prof_is_admin" ${record?.is_admin ? 'checked' : ''} class="text-blue-500 focus:ring-0 rounded bg-zinc-900 border-zinc-800">
-                <label for="prof_is_admin" class="text-xs font-mono text-zinc-400">Admin Account</label>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">Biography / Backstory (Supports Markdown: **bold**, - list, line breaks)</label>
+                <textarea name="bio" rows="5" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">${record?.bio || ''}</textarea>
             </div>
         `;
     }
@@ -1137,15 +1394,13 @@ async function saveAdminRecord(e) {
     const payload = {};
 
     for (const [key, value] of formData.entries()) {
-        payload[key] = value;
+        if (key !== 'file' && !key.startsWith('avatar_file') && !key.startsWith('project_file')) {
+            payload[key] = value;
+        }
     }
 
     if (currentAdminTab === 'videos' || currentAdminTab === 'projects') {
         payload['is_featured'] = !!formData.get('is_featured');
-    }
-
-    if (currentAdminTab === 'profiles') {
-        payload['is_admin'] = !!formData.get('is_admin');
     }
 
     if (payload['tags']) {
@@ -1167,26 +1422,26 @@ async function saveAdminRecord(e) {
                 payload[field] = null;
             }
         }
-        if (payload['position']) {
-            payload['position'] = parseInt(payload['position']);
-        }
+    }
+
+    if (payload['position']) {
+        payload['position'] = parseInt(payload['position']);
     }
 
     let error = null;
 
     if (currentAdminTab === 'profiles') {
-        if (isEditMode && editingRecordId) {
-            const { error: err } = await supabaseClient
-                .from('profiles')
-                .update(payload)
-                .eq('id', editingRecordId);
-            error = err;
-        } else {
-            const { error: err } = await supabaseClient
-                .from('profiles')
-                .insert([payload]);
-            error = err;
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        if (!userId) {
+            alert("No authenticated session found.");
+            return;
         }
+        const { error: err } = await supabaseClient
+            .from('profiles')
+            .update(payload)
+            .eq('id', userId);
+        error = err;
     } else {
         if (isEditMode && editingRecordId) {
             const { error: err } = await supabaseClient
@@ -1205,7 +1460,7 @@ async function saveAdminRecord(e) {
     if (error) {
         alert(`Save operation failed: ${error.message}`);
     } else {
-        alert("Record successfully saved to the cloud database!");
+        alert("Record successfully saved to your cloud database!");
         hideAdminCMSForm();
         loadAdminContentList();
         loadGlobalProfile();
@@ -1213,164 +1468,47 @@ async function saveAdminRecord(e) {
     }
 }
 
+// --- SECURED ADMIN LOGOUT WITH FIELDS WIPE ---
+async function handleAdminLogout() {
+    if (!supabaseClient) return;
 
-// --- 8. UX GLOBAL EVENT LISTENERS & INITS ---
-function setupGlobalEventListeners() {
-    // Close portal dropdown on clicking outside
-    window.addEventListener('click', (e) => {
-        const dropdownMenu = document.getElementById('portalDropdownMenu');
-        const dropdownBtn = document.getElementById('portalDropdownBtn');
-        if (dropdownMenu && dropdownBtn) {
-            if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                dropdownMenu.classList.add('hidden');
-            }
-        }
-    });
+    await supabaseClient.auth.signOut();
 
-    document.getElementById('portalDropdownBtn')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const menu = document.getElementById('portalDropdownMenu');
-        if (menu) menu.classList.toggle('hidden');
-    });
-
-    // Mobile menu toggle
-    const mobileToggle = document.getElementById('mobileNavToggle');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (mobileToggle && mobileMenu) {
-        mobileToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
+    const loginForm = document.getElementById('adminLoginForm');
+    if (loginForm) {
+        loginForm.reset();
     }
 
-    // Command palette key binds
-    window.addEventListener('keydown', (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-            e.preventDefault();
-            toggleCommandPalette();
-        }
-        if (e.key === 'Escape') {
-            document.getElementById('commandPalette')?.classList.add('hidden');
-        }
-    });
-
-    document.getElementById('searchTrigger')?.addEventListener('click', toggleCommandPalette);
-    document.getElementById('cmdCloseBtn')?.addEventListener('click', () => {
-        document.getElementById('commandPalette')?.classList.add('hidden');
-    });
-
-    // Content asset tabs toggling
-    document.querySelectorAll('.asset-tab').forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            const activeTab = e.currentTarget.getAttribute('data-tab');
-            document.querySelectorAll('.asset-tab').forEach(t => {
-                t.classList.remove('text-blue-500', 'border-b-2', 'border-blue-500');
-                t.classList.add('text-zinc-400');
-            });
-            e.currentTarget.classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
-
-            document.querySelectorAll('.asset-tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`asset-${activeTab}`)?.classList.remove('hidden');
-        });
-    });
-
-    // Admin dashboard tabs toggling
-    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.admin-nav-btn').forEach(b => {
-                b.classList.remove('text-blue-400', 'bg-blue-500/10', 'font-semibold');
-                b.classList.add('text-zinc-400');
-            });
-            e.currentTarget.classList.add('text-blue-400', 'bg-blue-500/10', 'font-semibold');
-
-            currentAdminTab = e.currentTarget.getAttribute('data-tab');
-            document.getElementById('adminActionSectionTitle').textContent = `Manage ${currentAdminTab.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`;
-            loadAdminContentList();
-        });
-    });
-
-    // Library category filters toggling
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            document.querySelectorAll('.filter-tab').forEach(t => {
-                t.classList.remove('bg-blue-600', 'text-white');
-                t.classList.add('text-zinc-400');
-            });
-            e.currentTarget.classList.add('bg-blue-600', 'text-white');
-            loadContentLibrary(e.currentTarget.getAttribute('data-filter'));
-        });
-    });
-
-    // Admin login / cancel / save bindings
-    document.getElementById('adminLoginForm')?.addEventListener('submit', handleAdminLogin);
-    document.getElementById('adminLogoutBtn')?.addEventListener('click', handleAdminLogout);
-    document.getElementById('adminAddNewContentBtn')?.addEventListener('click', () => showAdminCMSForm(false));
-    document.getElementById('adminCancelCMSFormBtn')?.addEventListener('click', hideAdminCMSForm);
-    document.getElementById('adminCMSForm')?.addEventListener('submit', saveAdminRecord);
+    checkPortalSession();
+    loadGlobalProfile();
 }
 
-window.navigateToLogin = function(role) {
-    selectedPortalRole = role;
-    isSignUpMode = false;
-    const dropdown = document.getElementById('portalDropdownMenu');
-    if (dropdown) dropdown.classList.add('hidden');
-
-    window.location.hash = 'admin';
-    renderAuthFormUI();
-};
-
-function renderAuthFormUI() {
-    const headerTitle = document.getElementById('authHeaderTitle');
-    const headerSubtitle = document.getElementById('authHeaderSubtitle');
-    const headerIcon = document.getElementById('authHeaderIcon');
-    const submitBtn = document.getElementById('adminSubmitBtn');
-    const toggleContainer = document.getElementById('authModeToggleContainer');
-    const modeToggle = document.getElementById('authModeToggle');
-
-    if (!headerTitle) return;
-
-    if (selectedPortalRole === 'admin') {
-        // Admin Mode - Login ONLY
-        headerTitle.textContent = "Admin Console Sign In";
-        headerSubtitle.textContent = "Authorized site content manipulation and message center.";
-        headerIcon.className = "fa-solid fa-user-lock text-purple-500 text-3xl mb-2";
-        submitBtn.textContent = "Log In as Administrator";
-        if (toggleContainer) toggleContainer.classList.add('hidden');
-        isSignUpMode = false;
-    } else {
-        // Student Mode - Login & Signup allowed
-        if (toggleContainer) toggleContainer.classList.remove('hidden');
-
-        if (isSignUpMode) {
-            headerTitle.textContent = "Register Student Account";
-            headerSubtitle.textContent = "Join the Python Masterclass and unlock premium downloadable source assets.";
-            headerIcon.className = "fa-solid fa-user-plus text-blue-500 text-3xl mb-2";
-            submitBtn.textContent = "Sign Up (Register Student)";
-            if (modeToggle) modeToggle.textContent = "Already have an account? Sign In";
-        } else {
-            headerTitle.textContent = "Member Portal Access";
-            headerSubtitle.textContent = "Unlock premium Python courses, interactive quizzes, and downloadable resources.";
-            headerIcon.className = "fa-solid fa-graduation-cap text-sky-500 text-3xl mb-2";
-            submitBtn.textContent = "Log In as Student";
-            if (modeToggle) modeToggle.textContent = "New Student? Create a Free Account";
-        }
-    }
-}
+let isSignUpMode = false;
 
 window.toggleAuthMode = function() {
     isSignUpMode = !isSignUpMode;
-    renderAuthFormUI();
+    const submitBtn = document.getElementById('adminSubmitBtn');
+    const modeToggle = document.getElementById('authModeToggle');
+    const headerTitle = document.getElementById('authHeaderTitle');
+    const headerSubtitle = document.getElementById('authHeaderSubtitle');
+    const headerIcon = document.getElementById('authHeaderIcon');
+
+    if (isSignUpMode) {
+        submitBtn.textContent = "Sign Up (Register Student)";
+        modeToggle.textContent = "Already have an account? Log In";
+        headerTitle.textContent = "Create Student Account";
+        headerSubtitle.textContent = "Join the Python Masterclass and unlock files and downloadable source assets.";
+        headerIcon.className = "fa-solid fa-user-plus text-blue-500 text-3xl mb-2";
+    } else {
+        submitBtn.textContent = "Access Workspace";
+        modeToggle.textContent = "New Student? Create an Account";
+        headerTitle.textContent = "Student Workspace";
+        headerSubtitle.textContent = "Register credentials or login with Google to unlock course materials.";
+        headerIcon.className = "fa-solid fa-graduation-cap text-blue-500 text-3xl mb-2";
+    }
 };
 
-function toggleCommandPalette() {
-    const cp = document.getElementById('commandPalette');
-    if (!cp) return;
-    cp.classList.toggle('hidden');
-    if (!cp.classList.contains('hidden')) {
-        document.getElementById('cmdInput')?.focus();
-    }
-}
-
-// Professional Authentication Router supporting Email Confirmations and Error catch blocks
+// Professional Authentication Router supporting Email Confirmations
 async function handleAdminLogin(e) {
     e.preventDefault();
     if (!supabaseClient) return;
@@ -1378,7 +1516,7 @@ async function handleAdminLogin(e) {
     const email = document.getElementById('adminEmail').value;
     const password = document.getElementById('adminPassword').value;
 
-    if (selectedPortalRole === 'student' && isSignUpMode) {
+    if (currentPortalViewMode === 'student' && isSignUpMode) {
         const { data, error } = await supabaseClient.auth.signUp({
             email,
             password,
@@ -1396,12 +1534,12 @@ async function handleAdminLogin(e) {
         if (data.user && (!data.session)) {
             alert("✉️ Verification Link Sent! We've dispatched a confirmation link to your registered email. Please click the link inside your inbox to activate your credentials before logging in.");
             isSignUpMode = false;
-            renderAuthFormUI();
+            toggleAuthMode();
         } else {
             alert("Success! Welcome aboard. You are now logged in.");
             isSignUpMode = false;
-            renderAuthFormUI();
-            checkAdminSession();
+            toggleAuthMode();
+            checkPortalSession();
             loadGlobalProfile();
         }
     } else {
@@ -1413,7 +1551,7 @@ async function handleAdminLogin(e) {
                 alert(`Authentication Failed: ${error.message}`);
             }
         } else {
-            checkAdminSession();
+            checkPortalSession();
             loadGlobalProfile();
         }
     }
@@ -1433,17 +1571,104 @@ window.signInWithGoogle = async function() {
     }
 };
 
-async function handleAdminLogout() {
+// --- DYNAMIC CONTACT SUBMISSIONS RECIEVER ---
+async function handleContactFormSubmit(e) {
+    e.preventDefault();
     if (!supabaseClient) return;
-    await supabaseClient.auth.signOut();
 
-    const loginForm = document.getElementById('adminLoginForm');
-    if (loginForm) {
-        loginForm.reset();
+    const name = document.getElementById('contact_name').value;
+    const email = document.getElementById('contact_email').value;
+    const message = document.getElementById('contact_message').value;
+
+    const { error } = await supabaseClient
+        .from('contact_submissions')
+        .insert([{ name, email, message }]);
+
+    if (error) {
+        alert("Failed to send message: " + error.message);
+    } else {
+        alert("Your message has been safely saved to my HQ database! I will get in touch soon.");
+        e.target.reset();
+    }
+}
+
+// --- UX GLOBAL EVENT LISTENERS & INITS ---
+function setupGlobalEventListeners() {
+    const mobileToggle = document.getElementById('mobileNavToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileToggle && mobileMenu) {
+        mobileToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
     }
 
-    checkAdminSession();
-    loadGlobalProfile();
+    window.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            toggleCommandPalette();
+        }
+        if (e.key === 'Escape') {
+            document.getElementById('commandPalette')?.classList.add('hidden');
+        }
+    });
+
+    document.getElementById('searchTrigger')?.addEventListener('click', toggleCommandPalette);
+    document.getElementById('cmdCloseBtn')?.addEventListener('click', () => {
+        document.getElementById('commandPalette').classList.add('hidden');
+    });
+
+    document.querySelectorAll('.asset-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const activeTab = e.currentTarget.getAttribute('data-tab');
+            document.querySelectorAll('.asset-tab').forEach(t => {
+                t.classList.remove('text-blue-500', 'border-b-2', 'border-blue-500');
+                t.classList.add('text-zinc-400');
+            });
+            e.currentTarget.classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
+            document.querySelectorAll('.asset-tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`asset-${activeTab}`)?.classList.remove('hidden');
+        });
+    });
+
+    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.admin-nav-btn').forEach(b => {
+                b.classList.remove('text-blue-400', 'bg-blue-500/10', 'font-semibold');
+                b.classList.add('text-zinc-400');
+            });
+            e.currentTarget.classList.add('text-blue-400', 'bg-blue-500/10', 'font-semibold');
+            currentAdminTab = e.currentTarget.getAttribute('data-tab');
+            document.getElementById('adminActionSectionTitle').textContent = `Manage ${currentAdminTab.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`;
+            hideAdminCMSForm();
+            loadAdminContentList();
+        });
+    });
+
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-tab').forEach(t => {
+                t.classList.remove('bg-blue-600', 'text-white');
+                t.classList.add('text-zinc-400');
+            });
+            e.currentTarget.classList.add('bg-blue-600', 'text-white');
+            loadContentLibrary(e.currentTarget.getAttribute('data-filter'));
+        });
+    });
+
+    document.getElementById('adminLoginForm')?.addEventListener('submit', handleAdminLogin);
+    document.getElementById('adminAddNewContentBtn')?.addEventListener('click', () => showAdminCMSForm(false));
+    document.getElementById('adminCancelCMSFormBtn')?.addEventListener('click', hideAdminCMSForm);
+    document.getElementById('adminCMSForm')?.addEventListener('submit', saveAdminRecord);
+    document.getElementById('contactFormElement')?.addEventListener('submit', handleContactFormSubmit);
+}
+
+function toggleCommandPalette() {
+    const cp = document.getElementById('commandPalette');
+    if (!cp) return;
+    cp.classList.toggle('hidden');
+    if (!cp.classList.contains('hidden')) {
+        document.getElementById('cmdInput')?.focus();
+    }
 }
 
 function getSupabaseWarningHTML() {
