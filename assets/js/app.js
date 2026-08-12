@@ -1,6 +1,8 @@
-// Master Client-Side JavaScript Controller (Version 3) - Personal Profile & Dynamic Curriculum CMS
-// Sourced from Creator Digital HQ architecture and optimized for full admin CRUD on GitHub Pages.
+// Master Controller Engine - Dynamic Premium Personal HQ & Gated Learning System
+// Integrates client-side routing, Supabase connections, Device file uploads, Markdown parsing, and CMS CRUD.
 
+// --- 1. CONFIGURATION & CLIENT INIT ---
+// Replace these with your actual Supabase Project configuration values
 const SUPABASE_URL = "https://ysxugzbvkhdtvfsitwgm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7_TwI8LtnGBJDDXEhIJnog_okv8a1QK";
 
@@ -17,7 +19,7 @@ try {
     console.warn("Supabase SDK initialization warning.", e);
 }
 
-// --- CLIENT-SIDE ROUTER ---
+// --- 2. CLIENT-SIDE ROUTER ---
 const routes = {
     'home': 'page-home',
     'about': 'page-about',
@@ -63,7 +65,7 @@ function router() {
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', () => {
     router();
-    loadGlobalProfile(); // <-- This runs immediately on load to fetch your profile details!
+    loadGlobalProfile(); // Fix A: Ensures bio, profile name, and DP fetch globally on boot
     setupGlobalEventListeners();
 });
 
@@ -78,7 +80,7 @@ function executePageLifecycle(route, params) {
     }
 }
 
-// --- DYNAMIC FILE UPLOADS USING SUPABASE STORAGE ---
+// --- 3. DYNAMIC FILE UPLOADS USING SUPABASE STORAGE ---
 async function uploadDeviceFile(fileInputId, targetUrlInputName) {
     const fileInput = document.getElementById(fileInputId);
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
@@ -105,13 +107,13 @@ async function uploadDeviceFile(fileInputId, targetUrlInputName) {
         if (urlInput) {
             urlInput.value = publicUrl;
         }
-        alert("Image uploaded successfully! The live URL has been linked below.");
+        alert("Image uploaded successfully! The live public link is bound to your profile.");
     } catch (err) {
-        alert(`Device upload failed. Make sure your storage bucket is created and set to public: ${err.message}`);
+        alert(`Device upload failed. Ensure storage bucket "assets" is set to public: ${err.message}`);
     }
 }
 
-// --- PROFILE SYNC ENGINE & SOCIAL WRAPPING ---
+// --- 4. DYNAMIC PROFILE SYNC ENGINE ---
 async function loadGlobalProfile() {
     if (!supabaseClient) return;
 
@@ -125,9 +127,11 @@ async function loadGlobalProfile() {
 
         if (error || !profile) return;
 
+        // Sync homepage cards
         const heroName = document.getElementById('heroProfileName');
         if (heroName) heroName.textContent = `"${profile.full_name}"`;
 
+        // Sync about profile card details
         const aboutDP = document.getElementById('aboutProfileDP');
         const aboutIcon = document.getElementById('aboutProfileUserIcon');
         const aboutName = document.getElementById('aboutProfileName');
@@ -135,7 +139,7 @@ async function loadGlobalProfile() {
 
         if (aboutName) aboutName.textContent = profile.full_name;
 
-        // Formattable biography block (Parses Markdown)
+        // Formattable biography block (Parses Markdown via Marked)
         if (aboutBio && profile.bio) {
             aboutBio.innerHTML = typeof marked !== 'undefined' ? marked.parse(profile.bio) : profile.bio.replace(/\n/g, '<br>');
         }
@@ -151,7 +155,7 @@ async function loadGlobalProfile() {
             }
         }
 
-        // Map and render social links dynamically
+        // Map social handles dynamically
         const ghLink = document.getElementById('profileGithubLink');
         const liLink = document.getElementById('profileLinkedinLink');
         const ytLink = document.getElementById('profileYoutubeLink');
@@ -181,11 +185,11 @@ async function loadGlobalProfile() {
             }
         }
     } catch (e) {
-        console.warn("Profile sync exception:", e);
+        console.warn("Global profile sync warning:", e);
     }
 }
 
-// --- DATA FETCHING METHODS ---
+// --- 5. DATA FETCHING METHODS ---
 async function loadHomepageFeatured() {
     const grid = document.getElementById('featuredCourseGrid');
     if (!grid) return;
@@ -198,7 +202,7 @@ async function loadHomepageFeatured() {
         .limit(3);
 
     if (error || !featured || featured.length === 0) {
-        grid.innerHTML = `<div class="col-span-3 text-zinc-500 text-sm text-center py-6">No featured courses populated. Log in to Admin to add records.</div>`;
+        grid.innerHTML = `<div class="col-span-3 text-zinc-500 text-sm text-center py-6">No featured courses populated. Sign in to Admin to add records.</div>`;
         return;
     }
 
@@ -219,7 +223,7 @@ async function loadHomepageFeatured() {
 }
 
 async function loadAboutProfile() {
-    // 1. Instantly pull name and DP first so they aren't blocked by empty achievements
+    // Fix B: Uncouples achievements query so your biography still renders on blank databases
     loadGlobalProfile();
 
     const list = document.getElementById('achievementsList');
@@ -227,19 +231,16 @@ async function loadAboutProfile() {
 
     if (!supabaseClient) return;
 
-    // 2. Fetch milestones from the database
     const { data: achievements, error } = await supabaseClient
         .from('achievements')
         .select('*')
         .order('date_achieved', { ascending: false });
 
-    // 3. If there are no achievements, show a placeholder instead of breaking or exiting early
     if (error || !achievements || achievements.length === 0) {
-        list.innerHTML = `<div class="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800 text-center text-xs text-zinc-500 font-mono py-6">No professional milestones recorded yet. Add them in your Admin panel!</div>`;
+        list.innerHTML = `<div class="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800 text-center text-xs text-zinc-500 font-mono py-6">No milestones recorded yet. Add them in your Admin panel!</div>`;
         return;
     }
 
-    // 4. Render milestones if they exist
     list.innerHTML = achievements.map(ach => `
         <div class="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -253,7 +254,6 @@ async function loadAboutProfile() {
         </div>
     `).join('');
 }
-
 
 async function loadProjectsShowcase() {
     const grid = document.getElementById('projectsGrid');
@@ -270,6 +270,7 @@ async function loadProjectsShowcase() {
         return;
     }
 
+    // Projects Grid renders short summary. Rich specifications are gated.
     grid.innerHTML = projects.map(proj => `
         <div class="vercel-card flex flex-col justify-between">
             <div class="space-y-4">
@@ -283,15 +284,61 @@ async function loadProjectsShowcase() {
                 <div>
                     ${proj.image_url ? `<div class="aspect-video w-full rounded border border-zinc-850 overflow-hidden mb-3"><img src="${proj.image_url}" class="w-full h-full object-cover"/></div>` : ''}
                     <h3 class="font-bold text-lg text-white mb-2">${proj.title}</h3>
-                    <p class="text-sm text-zinc-400 line-clamp-4">${proj.summary}</p>
+                    <p class="text-xs text-zinc-500 line-clamp-2 mb-4">${proj.summary}</p>
+                    
+                    <button onclick="viewProjectDetails('${proj.id}')" class="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-semibold text-zinc-300 w-full text-center transition-colors">
+                        <i class="fa-solid fa-circle-info mr-1"></i>View Full Specifications
+                    </button>
                 </div>
             </div>
-            <div class="mt-6 flex flex-wrap gap-1.5">
+            <div class="mt-4 flex flex-wrap gap-1.5">
                 ${proj.tags ? proj.tags.map(tag => `<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-500 border border-zinc-800">${tag}</span>`).join('') : ''}
             </div>
         </div>
     `).join('');
 }
+
+// Authenticated popup window mapping rich Markdown descriptions
+window.viewProjectDetails = async function(projectId) {
+    if (!supabaseClient) return;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        alert("🔐 Members Only: Please register a student account or log in to view project technical write-ups and blueprints.");
+        window.location.hash = "admin";
+        return;
+    }
+
+    const { data: project, error } = await supabaseClient
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+    if (error || !project) {
+        alert("Failed to load details: " + error.message);
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = "fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4";
+    modal.id = "temp-project-modal";
+    
+    const processedDesc = typeof marked !== 'undefined' ? marked.parse(project.description || '*No detailed specs recorded.*') : (project.description || '');
+
+    modal.innerHTML = `
+        <div class="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
+                <h3 class="font-bold text-base text-white">${project.title}</h3>
+                <button onclick="document.getElementById('temp-project-modal').remove()" class="text-zinc-500 hover:text-white text-xs px-2.5 py-1.5 rounded bg-zinc-800"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-sm text-zinc-300 leading-relaxed prose prose-invert">
+                ${processedDesc}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
 
 async function loadContentLibrary(filter) {
     const grid = document.getElementById('contentLibraryGrid');
@@ -384,7 +431,7 @@ async function loadLearningHub(activeLessonSlug) {
         .order('position', { ascending: true });
 
     if (error || !modules || modules.length === 0) {
-        syllabus.innerHTML = `<div class="text-zinc-500 text-xs text-center py-6">Syllabus is empty. Create Course Modules and Lessons in Admin to begin.</div>`;
+        syllabus.innerHTML = `<div class="text-zinc-500 text-xs text-center py-6">Syllabus is empty. Initialize Modules inside the Admin panel.</div>`;
         return;
     }
 
@@ -582,10 +629,27 @@ window.nextFlashcard = function() {
     }
 };
 
-function renderResourcesTab(resources) {
+// Premium Lockout mapping on resources folder
+async function renderResourcesTab(resources) {
     const list = document.getElementById('lessonResourcesList');
     if (!list) return;
     list.innerHTML = '';
+
+    if (!supabaseClient) return;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+        list.innerHTML = `
+            <li class="p-6 rounded-lg bg-blue-500/5 border border-blue-500/10 text-center space-y-3">
+                <i class="fa-solid fa-lock text-blue-500 text-lg"></i>
+                <p class="text-xs font-semibold text-zinc-300">Downloadable Resources are Locked</p>
+                <p class="text-[11px] text-zinc-500 max-w-xs mx-auto">Please create a student account or log in via the Admin/Portal page to download Python source codes and cheatsheets.</p>
+                <a href="#admin" class="inline-block mt-2 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-[10px] font-bold text-white transition-colors">Log In / Sign Up</a>
+            </li>
+        `;
+        return;
+    }
 
     if (!resources || resources.length === 0) {
         list.innerHTML = '<li class="text-xs text-zinc-500 font-mono">No supplementary resources uploaded for this session.</li>';
@@ -605,7 +669,7 @@ function renderResourcesTab(resources) {
     `).join('');
 }
 
-// --- SECURED CREATOR ADMIN BACKEND (CMS CRUD) ---
+// --- 6. SECURED CREATOR ADMIN BACKEND (CMS CRUD) ---
 let currentAdminTab = 'videos';
 let loadedAdminData = [];
 let isEditMode = false;
@@ -681,7 +745,7 @@ function showAdminCMSForm() {
     if (formContainer) formContainer.classList.remove('hidden');
     
     const formTitle = document.getElementById('adminFormHeaderTitle');
-    if (formTitle) formTitle.textContent = isEditMode ? `Edit ${currentAdminTab.slice(0, -1)} Record` : `Create New ${currentAdminTab.slice(0, -1)} Record`;
+    if (formTitle) formTitle.textContent = isEditMode ? `Edit ${currentAdminTab.split('_').join(' ').slice(0, -1)} Record` : `Create New ${currentAdminTab.split('_').join(' ').slice(0, -1)} Record`;
 
     setupAdminFormFields(isEditMode ? loadedAdminData.find(d => d.id === editingRecordId) : null);
 }
@@ -919,15 +983,15 @@ async function setupAdminFormFields(record = null) {
                 <input type="file" id="avatar_file_picker" accept="image/*" class="mt-2 text-xs text-zinc-500 block w-full file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" onchange="uploadDeviceFile('avatar_file_picker', 'avatar_url')">
             </div>
             <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">GitHub Link</label>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">GitHub Profile Link</label>
                 <input type="url" name="github_link" value="${record?.github_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">LinkedIn Link</label>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">LinkedIn Profile Link</label>
                 <input type="url" name="linkedin_link" value="${record?.linkedin_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-mono text-zinc-400 mb-1">YouTube Link</label>
+                <label class="block text-xs font-mono text-zinc-400 mb-1">YouTube Channel Link</label>
                 <input type="url" name="youtube_link" value="${record?.youtube_link || ''}" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
             </div>
             <div class="md:col-span-2">
@@ -1022,7 +1086,7 @@ async function saveAdminRecord(e) {
     if (error) {
         alert(`Save operation failed: ${error.message}`);
     } else {
-        alert("Record successfully saved to the cloud database!");
+        alert("Record successfully saved to your cloud database!");
         hideAdminCMSForm();
         loadAdminContentList();
         loadGlobalProfile();
@@ -1067,7 +1131,33 @@ async function handleAdminLogout() {
     }
     
     checkAdminSession();
+    loadGlobalProfile();
 }
+
+let isSignUpMode = false;
+
+window.toggleAuthMode = function() {
+    isSignUpMode = !isSignUpMode;
+    const submitBtn = document.getElementById('adminSubmitBtn');
+    const modeToggle = document.getElementById('authModeToggle');
+    const headerTitle = document.getElementById('authHeaderTitle');
+    const headerSubtitle = document.getElementById('authHeaderSubtitle');
+    const headerIcon = document.getElementById('authHeaderIcon');
+    
+    if (isSignUpMode) {
+        submitBtn.textContent = "Sign Up (Register Student)";
+        modeToggle.textContent = "Already have an account? Log In";
+        headerTitle.textContent = "Create Student Account";
+        headerSubtitle.textContent = "Join the Python Masterclass and unlock files and downloadable source assets.";
+        headerIcon.className = "fa-solid fa-user-plus text-blue-500 text-3xl mb-2";
+    } else {
+        submitBtn.textContent = "Log In to Console";
+        modeToggle.textContent = "New Student? Create an Account";
+        headerTitle.textContent = "Portal Authentication";
+        headerSubtitle.textContent = "Authorized site administration & premium student registration console.";
+        headerIcon.className = "fa-solid fa-lock text-zinc-600 text-3xl mb-2";
+    }
+};
 
 async function handleAdminLogin(e) {
     e.preventDefault();
@@ -1076,11 +1166,46 @@ async function handleAdminLogin(e) {
     const email = document.getElementById('adminEmail').value;
     const password = document.getElementById('adminPassword').value;
 
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) {
-        alert(`Authentication Failed: ${error.message}`);
+    if (isSignUpMode) {
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+            alert(`Registration Failed: ${error.message}`);
+        } else {
+            alert("Success! Welcome aboard. You are now logged in.");
+            isSignUpMode = false;
+            toggleAuthMode();
+            checkAdminSession();
+            loadGlobalProfile();
+        }
     } else {
-        checkAdminSession();
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert(`Authentication Failed: ${error.message}`);
+        } else {
+            checkAdminSession();
+            loadGlobalProfile();
+        }
+    }
+}
+
+// --- DYNAMIC CONTACT SUBMISSIONS RECIEVER ---
+async function handleContactFormSubmit(e) {
+    e.preventDefault();
+    if (!supabaseClient) return;
+
+    const name = e.target.querySelector('input[type="text"]').value;
+    const email = e.target.querySelector('input[type="email"]').value;
+    const message = e.target.querySelector('textarea').value;
+
+    const { error } = await supabaseClient
+        .from('contact_submissions')
+        .insert([{ name, email, message }]);
+
+    if (error) {
+        alert("Failed to send message: " + error.message);
+    } else {
+        alert("Your message has been safely saved to my HQ database! I will get in touch soon.");
+        e.target.reset();
     }
 }
 
@@ -1152,6 +1277,7 @@ function setupGlobalEventListeners() {
     document.getElementById('adminAddNewContentBtn')?.addEventListener('click', showAdminCMSForm);
     document.getElementById('adminCancelCMSFormBtn')?.addEventListener('click', hideAdminCMSForm);
     document.getElementById('adminCMSForm')?.addEventListener('submit', saveAdminRecord);
+    document.getElementById('contactFormElement')?.addEventListener('submit', handleContactFormSubmit);
 }
 
 function toggleCommandPalette() {
