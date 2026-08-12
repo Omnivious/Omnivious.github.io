@@ -53,10 +53,10 @@
             <!-- Brand Logo -->
             <a href="#home" class="flex items-center space-x-3 group">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-lg shadow-lg group-hover:rotate-6 transition-transform">
-                    MAK
+                    DG
                 </div>
                 <span class="font-extrabold text-lg tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
-                    Mohammad Amaan Khan
+                    Digital Ground
                 </span>
             </a>
 
@@ -82,7 +82,7 @@
                 <!-- Admin CMS Button -->
                 <a href="#admin" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-zinc-700 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition-all">
                     <i class="fa-solid fa-lock"></i>
-                    <span>Admin</span>
+                    <span>Admin/Portal</span>
                 </a>
 
                 <!-- Mobile Navigation Toggle -->
@@ -148,7 +148,7 @@
                             <p class="text-zinc-600"># Dynamic Profile Class</p>
                             <p><span class="text-purple-400">class</span> <span class="text-yellow-400">Developer</span>:</p>
                             <p class="pl-4">name = <span class="text-green-300" id="heroProfileName">"Your Name"</span></p>
-                            <p class="pl-4">role = <span class="text-green-300">"Course Creator"</span></p>
+                            <p class="pl-4">role = <span class="text-green-300">"Content Creator</span></p>
                             <p class="pl-4">videos_count = <span class="text-red-300">189</span></p>
                             <p class="pl-4">stack = [<span class="text-green-300">"Python"</span>, <span class="text-green-300">"Supabase"</span>]</p>
                         </div>
@@ -368,7 +368,8 @@
                     <h2 class="text-2xl font-bold tracking-tight">Get in Touch</h2>
                     <p class="text-zinc-500 text-xs mt-1">Have questions about the Python course? Send a message.</p>
                 </div>
-                <form class="space-y-4" onsubmit="event.preventDefault(); alert('Message successfully sent!'); this.reset();">
+                <!-- Dynamic contact form handler linked inside app.js -->
+                <form id="contactFormElement" class="space-y-4">
                     <div>
                         <label class="block text-xs font-mono text-zinc-400 mb-1">Your Name</label>
                         <input type="text" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
@@ -389,12 +390,12 @@
         <!-- ==================== PAGE: ADMIN CONSOLE ==================== -->
         <section id="page-admin" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 hidden">
             <div id="adminAuthContainer" class="max-w-md mx-auto space-y-8">
-                <!-- User/Admin Login Form -->
+                <!-- User/Admin Login & Student Registration Form -->
                 <div class="border border-zinc-800 bg-zinc-900 p-8 rounded-xl shadow-2xl space-y-6">
                     <div class="text-center">
-                        <i class="fa-solid fa-lock text-zinc-600 text-3xl mb-2"></i>
-                        <h2 class="text-2xl font-bold tracking-tight">Admin Authentication</h2>
-                        <p class="text-zinc-500 text-xs mt-1">Authorized site content manipulation panel.</p>
+                        <i class="fa-solid fa-lock text-zinc-600 text-3xl mb-2" id="authHeaderIcon"></i>
+                        <h2 class="text-2xl font-bold tracking-tight" id="authHeaderTitle">Portal Authentication</h2>
+                        <p class="text-zinc-500 text-xs mt-1" id="authHeaderSubtitle">Authorized site administration & premium student registration console.</p>
                     </div>
                     <form id="adminLoginForm" class="space-y-4">
                         <div>
@@ -405,7 +406,12 @@
                             <label class="block text-xs font-mono text-zinc-400 mb-1">Password</label>
                             <input type="password" id="adminPassword" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-blue-500 text-sm">
                         </div>
-                        <button type="submit" class="w-full btn-primary text-sm py-2">Log In to Console</button>
+                        <button type="submit" id="adminSubmitBtn" class="w-full btn-primary text-sm py-2">Log In to Console</button>
+                        
+                        <!-- Premium Member Registration Toggle -->
+                        <div class="text-center pt-2">
+                            <button type="button" id="authModeToggle" onclick="toggleAuthMode()" class="text-xs text-blue-400 hover:text-white font-medium">New Student? Create an Account</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -418,7 +424,7 @@
                     <div class="flex items-center justify-between pb-4 mb-4 border-b border-zinc-800">
                         <div>
                             <p id="adminUserDisplayName" class="font-bold text-sm">Admin Name</p>
-                            <span class="text-xs text-zinc-500">Root Access Granted</span>
+                            <span class="text-xs text-zinc-500">Workspace Connected</span>
                         </div>
                         <button id="adminLogoutBtn" class="text-zinc-500 hover:text-red-400 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>
                     </div>
@@ -507,7 +513,7 @@
     <!-- Footer block -->
     <footer class="w-full border-t border-zinc-900 py-6 glass-panel z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500">
-            <p>© 2026 Mohammad Amaan Khan. Created by me & hosted on GitHub Pages.</p>
+            <p>© 2026 Digital Ground. Created by Mohammad Amaan Khan & hosted on GitHub Pages.</p>
             <div class="flex space-x-4 mt-2 sm:mt-0">
                 <a href="#about" class="hover:text-white">Profile</a>
                 <a href="#projects" class="hover:text-white">Portfolio</a>
